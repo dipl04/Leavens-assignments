@@ -5,6 +5,10 @@
 #include "instruction.h"
 #include "utilities.h"
 
+void print_bof(BOFFILE bof);
+void execute_instructions(BOFFILE bof);
+void remove_spaces(char *s);
+
 void print_bof(BOFFILE bof)
 {
     // read the bof header
@@ -14,10 +18,12 @@ void print_bof(BOFFILE bof)
     word_type num_instructions = header.text_length;
 
     // print the header information
-    printf("BOF File: %s\n", bof.filename);
-    printf("Starting address: %u\n", header.text_start_address);
-    printf("Number of Instructions %u\n", num_instructions);
-    printf("Instructions:\n");
+
+    // debug print functions
+    // printf("BOF File: %s\n", bof.filename);
+    // printf("Starting address: %u\n", header.text_start_address);
+    // printf("Number of Instructions %u\n", num_instructions);
+    printf("Address Instruction\n");
 
     // loop through the instructions and print them
     for (word_type i = 0; i < num_instructions; i++)
@@ -30,7 +36,50 @@ void print_bof(BOFFILE bof)
 
         // print the instruction
         printf("%u: %s\n", i + header.text_start_address, assembly_instruction);
+
+        // debug
+        // const char *comp = instruction_compFunc2name(instruction);
+        // const char *otherComp = instruction_otherCompFunc2name(instruction);
+
+        // printf("comp: %s\n", comp);
+        // printf("other comp: %s", otherComp);
     }
+}
+
+void execute_instructions(BOFFILE bof)
+{
+    // read the bof header
+    BOFHeader header = bof_read_header(bof);
+
+    // initialize PC and SP
+    word_type PC = header.text_start_address;
+    word_type SP = header.stack_bottom_addr;
+
+    word_type num_instructions = header.text_length;
+
+    // make list of instructions
+    char **instructions = (char **)malloc(num_instructions * sizeof(char *));
+
+    for (word_type i = 0; i < num_instructions; i++)
+    {
+        // read the instruction
+        bin_instr_t instruction = instruction_read(bof);
+
+        // convert it to assembly
+        const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, instruction);
+
+        // add it to instructions
+        instructions[i] = assembly_instruction;
+    }
+
+    // bool running = true;
+    // while (running)
+    // {
+
+    //     switch ()
+    //     {
+    //     }
+    // }
 }
 
 int main(int argc, char *argv[])
@@ -68,6 +117,7 @@ int main(int argc, char *argv[])
     else
     {
         // execute the program
+        execute_instructions(bof);
     }
 
     return 0;

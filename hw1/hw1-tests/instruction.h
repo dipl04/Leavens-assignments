@@ -7,48 +7,98 @@
 #include "bof.h"
 
 // op codes in binary instructions for the SSM
-typedef enum {COMP_O = 0, OTHC_O = 1, ADDI_O = 2, ANDI_O = 3, BORI_O = 4,
-              NORI_O = 5, XORI_O = 6, 
-	      BEQ_O = 7, BGEZ_O = 8, BGTZ_O = 9, BLEZ_O = 10, BLTZ_O = 11,
-	      BNE_O = 12, JMPA_O = 13, CALL_O = 14, RTN_O = 15
-             } op_code;
+typedef enum
+{
+    COMP_O = 0,
+    OTHC_O = 1,
+    ADDI_O = 2,
+    ANDI_O = 3,
+    BORI_O = 4,
+    NORI_O = 5,
+    XORI_O = 6,
+    BEQ_O = 7,
+    BGEZ_O = 8,
+    BGTZ_O = 9,
+    BLEZ_O = 10,
+    BLTZ_O = 11,
+    BNE_O = 12,
+    JMPA_O = 13,
+    CALL_O = 14,
+    RTN_O = 15
+} op_code;
 
 // function codes in binary instructions for the SSM (when opcode is 0)
-typedef enum {NOP_F = 0, ADD_F = 1, SUB_F = 2, CPW_F = 3, 
-	      AND_F = 5, BOR_F = 6, NOR_F = 7, XOR_F = 8,
-	      LWR_F = 9, SWR_F = 10, SCA_F = 11, LWI_F = 12, NEG_F = 13
-             } func0_code;
+typedef enum
+{
+    NOP_F = 0,
+    ADD_F = 1,
+    SUB_F = 2,
+    CPW_F = 3,
+    AND_F = 5,
+    BOR_F = 6,
+    NOR_F = 7,
+    XOR_F = 8,
+    LWR_F = 9,
+    SWR_F = 10,
+    SCA_F = 11,
+    LWI_F = 12,
+    NEG_F = 13
+} func0_code;
 
 // function codes in binary instructions for the SSM (when opcode is 1)
-typedef enum {LIT_F = 1, ARI_F = 2, SRI_F = 3, MUL_F = 4, DIV_F = 5,
-	      CFHI_F = 6, CFLO_F = 7, SLL_F = 8, SRL_F = 9, JMP_F = 10,
-	      CSI_F = 11, JREL_F = 12, SYS_F = 15
-             } func1_code;
+typedef enum
+{
+    LIT_F = 1,
+    ARI_F = 2,
+    SRI_F = 3,
+    MUL_F = 4,
+    DIV_F = 5,
+    CFHI_F = 6,
+    CFLO_F = 7,
+    SLL_F = 8,
+    SRL_F = 9,
+    JMP_F = 10,
+    CSI_F = 11,
+    JREL_F = 12,
+    SYS_F = 15
+} func1_code;
 
 // instruction types (each is a binary instruction format)
-typedef enum {comp_instr_type, other_comp_instr_type,
-	      immed_instr_type, jump_instr_type, syscall_instr_type,
-	      error_instr_type
-             } instr_type;
+typedef enum
+{
+    comp_instr_type,
+    other_comp_instr_type,
+    immed_instr_type,
+    jump_instr_type,
+    syscall_instr_type,
+    error_instr_type
+} instr_type;
 
 // system calls
-typedef enum {exit_sc = 1, print_str_sc = 2,
-	      print_char_sc = 4, read_char_sc = 5,
-	      start_tracing_sc = 2046, stop_tracing_sc = 2047
+typedef enum
+{
+    exit_sc = 1,
+    print_str_sc = 2,
+    print_char_sc = 4,
+    read_char_sc = 5,
+    start_tracing_sc = 2046,
+    stop_tracing_sc = 2047
 } syscall_type;
 
 // computational type instructions, with opcode 0
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
-    reg_num_type rt : 3;  // target register
-    offset_type ot : 9;   // offset from target register
-    reg_num_type rs : 3;  // source register
-    offset_type os : 9;   // offset from source register
+    reg_num_type rt : 3; // target register
+    offset_type ot : 9;  // offset from target register
+    reg_num_type rs : 3; // source register
+    offset_type os : 9;  // offset from source register
     func_type func : 4;
 } comp_instr_t;
 
 // other computational type instructions, with opcode 1, except system calls
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
     reg_num_type reg : 3;
     offset_type offset : 9;
@@ -57,7 +107,8 @@ typedef struct {
 } other_comp_instr_t;
 
 // system call instructions, with op field 1 and func field 15
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
     reg_num_type reg : 3;
     offset_type offset : 9;
@@ -67,7 +118,8 @@ typedef struct {
 
 // immediate operand type instructions
 // with signed immediate operands
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
     reg_num_type reg : 3;
     offset_type offset : 9;
@@ -76,7 +128,8 @@ typedef struct {
 
 // immediate operand type instructions
 // with unsigned immediate operands
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
     reg_num_type reg : 3;
     offset_type offset : 9;
@@ -84,13 +137,15 @@ typedef struct {
 } uimmed_instr_t;
 
 // jump type instructions
-typedef struct {
+typedef struct
+{
     opcode_type op : 4;
     address_type addr : 28;
 } jump_instr_t;
 
 // binary instructions of any type
-typedef union {
+typedef union
+{
     comp_instr_t comp;
     other_comp_instr_t othc;
     syscall_instr_t syscall;
@@ -143,7 +198,7 @@ extern const char *instruction_mnemonic(bin_instr_t bi);
 // Return a string containing the assembly language form of instr,
 // which is found at address addr
 extern const char *instruction_assembly_form(address_type addr,
-					     bin_instr_t instr);
+                                             bin_instr_t instr);
 
 // Requires: out is open and writable FILE
 // print the header of the instruction output table on out
