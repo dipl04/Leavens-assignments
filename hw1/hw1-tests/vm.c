@@ -5,90 +5,24 @@
 #include "instruction.h"
 #include "utilities.h"
 #include "vm.h"
+#include "execute_instructions.h"
+#include "print_bof.h"
+
+#define MAGIC "BO32"
 
 // imported in vm.h
 // void print_bof(BOFFILE bof);
 // void execute_instructions(BOFFILE bof);
 // void remove_spaces(char *s);
 
-void print_bof(BOFFILE bof)
-{
-    // read the bof header
-    BOFHeader header = bof_read_header(bof);
+// moved print_bof definition in print_bof.c
 
-    // find the number of instructions
-    word_type num_instructions = header.text_length;
-
-    // print the header information
-
-    // debug print functions
-    // printf("BOF File: %s\n", bof.filename);
-    // printf("Starting address: %u\n", header.text_start_address);
-    // printf("Number of Instructions %u\n", num_instructions);
-    printf("Address Instruction\n");
-
-    // loop through the instructions and print them
-    for (word_type i = 0; i < num_instructions; i++)
-    {
-        // read the instruction
-        bin_instr_t instruction = instruction_read(bof);
-
-        // convert it to assembly
-        const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, instruction);
-
-        // print the instruction
-        // >> %6u reserves spaces needed
-        printf("%6u: %s\n", i + header.text_start_address, assembly_instruction);
-
-        // debug
-        // const char *comp = instruction_compFunc2name(instruction);
-        // const char *otherComp = instruction_otherCompFunc2name(instruction);
-
-        // printf("comp: %s\n", comp);
-        // printf("other comp: %s", otherComp);
-    }
-}
-
-void execute_instructions(BOFFILE bof)
-{
-    // read the bof header
-    BOFHeader header = bof_read_header(bof);
-
-    // initialize PC and SP
-    word_type PC = header.text_start_address;
-    word_type SP = header.stack_bottom_addr;
-
-    word_type num_instructions = header.text_length;
-
-    // make list of instructions
-    char **instructions = (char **)malloc(num_instructions * sizeof(char *));
-
-    for (word_type i = 0; i < num_instructions; i++)
-    {
-        // read the instruction
-        bin_instr_t instruction = instruction_read(bof);
-
-        // convert it to assembly
-        const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, instruction);
-
-        // add it to instructions
-        instructions[i] = assembly_instruction;
-    }
-
-    // bool running = true;
-    // while (running)
-    // {
-
-    //     switch ()
-    //     {
-    //     }
-    // }
-}
+// moved execute_instructions definition in execute_instructions.c
 
 int main(int argc, char *argv[])
 {
     // if argc < 2 throw an error and provide usage instructions
-    if (argc < 2)
+    if (argc < 2 || argc > 3)
     {
         fprintf(stderr, "Usage: %s [-p] <bof_file>\n", argv[0]);
         exit(EXIT_FAILURE);
@@ -110,6 +44,13 @@ int main(int argc, char *argv[])
 
     // open and read the bof file
     BOFFILE bof = bof_read_open(bof_file);
+
+    // check validity with magic number
+    BOFHeader bof_head = bof_read_header(bof);
+    if (!bof_has_correct_magic_number(bof_head)) { // ASCII for BO32
+        fprintf(stderr, "Error: magic number in bof file (%s) should be (%s)", bof_head.magic, MAGIC);
+        exit(EXIT_FAILURE);
+    }
 
     // check which mode we are in
     if (print_mode)
