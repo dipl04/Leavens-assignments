@@ -4,10 +4,12 @@
 #include "bof.h"
 #include "instruction.h"
 #include "utilities.h"
+#include "vm.h"
 
-void print_bof(BOFFILE bof);
-void execute_instructions(BOFFILE bof);
-void remove_spaces(char *s);
+// imported in vm.h
+// void print_bof(BOFFILE bof);
+// void execute_instructions(BOFFILE bof);
+// void remove_spaces(char *s);
 
 void print_bof(BOFFILE bof)
 {
@@ -35,7 +37,8 @@ void print_bof(BOFFILE bof)
         const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, instruction);
 
         // print the instruction
-        printf("%u: %s\n", i + header.text_start_address, assembly_instruction);
+        // >> %6u reserves spaces needed
+        printf("%6u: %s\n", i + header.text_start_address, assembly_instruction);
 
         // debug
         // const char *comp = instruction_compFunc2name(instruction);
