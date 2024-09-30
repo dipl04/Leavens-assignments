@@ -8,9 +8,10 @@
 // a size for the memory ( 2 ^ 1 6 words = 32K words )
 #define MEMORY_SIZE_IN_WORDS 32768
 
-static union mem_u {
-    word_type   words[MEMORY_SIZE_IN_WORDS];
-    uword_type  uwords[MEMORY_SIZE_IN_WORDS];
+static union mem_u
+{
+    word_type words[MEMORY_SIZE_IN_WORDS];
+    uword_type uwords[MEMORY_SIZE_IN_WORDS];
     bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
@@ -24,24 +25,10 @@ void execute_instructions(BOFFILE bof)
     word_type SP = header.stack_bottom_addr;
     word_type num_instructions = header.text_length;
 
-    // // make list of instructions
-    // char **instructions = (char **)malloc(num_instructions * sizeof(char *));
-
     for (word_type i = 0; i < num_instructions; i++)
     {
         // put all instructions in memory
         memory.instrs[header.text_start_address + i] = instruction_read(bof);
-
-        // i dont know if assembly form (string) is needed, i think thats for printing only?
-        /*
-        
-            // convert it to assembly
-            const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, instruction);
-
-            // add it to instructions
-            instructions[i] = assembly_instruction;
-        
-        */
     }
 
     bool running = true;
@@ -57,72 +44,130 @@ void execute_instructions(BOFFILE bof)
         // now the logic depends on the type of instruction
         switch (type)
         {
-            // these are enums provided in instruction.h
-            case comp_instr_type:       // computational instructions
+        // these are enums provided in instruction.h
+        case comp_instr_type: // computational instructions
+        {
+            opcode_type opcode = instruction.comp.op;
+            switch (opcode)
             {
-                opcode_type opcode = instruction.comp.op;
-                switch (opcode)
-                {
-                    case ADD_F:
-                        memory.words[SP] = memory.words[SP] + memory.words[SP - 1];
-                        SP--;
-                        break;
-                    // TODO: rest of them
-                    
-                    default:
-                        printf("Uknown computation opcode...\n");
-                        break;
-                }
+            // once we know the instruction type, we can use information from the instruction's struct
+            // see instruction.h.  Then, use the format on the ssm-vm.pdf file to run the operations.
+            case ADD_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    memory.words[SP] + memory.words[instruction.comp.rs + instruction.comp.os];
+                SP--;
                 break;
+
+            case SUB_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    memory.words[SP] - memory.words[instruction.comp.rs + instruction.comp.os];
+                SP--;
+                break;
+
+            case CPW_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    memory.words[instruction.comp.rs + instruction.comp.os];
+                SP--;
+                break;
+
+            case AND_F:
+                memory.uwords[instruction.comp.rt + instruction.comp.ot] =
+                    memory.uwords[SP] & (memory.uwords[instruction.comp.rs + instruction.comp.os]);
+                SP--;
+                break;
+
+            case BOR_F:
+                memory.uwords[instruction.comp.rt + instruction.comp.ot] =
+                    memory.uwords[SP] | (memory.uwords[instruction.comp.rs + instruction.comp.os]);
+                SP--;
+                break;
+
+            case NOR_F:
+                memory.uwords[instruction.comp.rt + instruction.comp.ot] =
+                    ~memory.uwords[SP] | (memory.uwords[instruction.comp.rs + instruction.comp.os]);
+                SP--;
+                break;
+
+            case XOR_F:
+                memory.uwords[instruction.comp.rt + instruction.comp.ot] =
+                    memory.uwords[SP] ^ (memory.uwords[instruction.comp.rs + instruction.comp.os]);
+                SP--;
+                break;
+
+            case LWR_F:
+                instruction.comp.rt =
+                    memory.words[instruction.comp.rs + instruction.comp.os];
+                SP--;
+                break;
+
+            case SWR_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    instruction.comp.rs;
+                SP--;
+                break;
+
+            case SCA_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    instruction.comp.rs + instruction.comp.os;
+                break;
+
+            case LWI_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    memory.words[instruction.comp.rs + instruction.comp.os];
+
+            case NEG_F:
+                memory.words[instruction.comp.rt + instruction.comp.ot] =
+                    -memory.words[instruction.comp.rs + instruction.comp.os];
+
+            default:
+                printf("Uknown computation opcode...\n");
             }
+            break;
+        }
 
-            case other_comp_instr_type: // other computational instructions
+        // TODO: rest of them
+        case other_comp_instr_type: // other computational instructions
+        {
+            opcode_type opcode = instruction.othc.op;
+            switch (opcode)
             {
-                opcode_type opcode = instruction.othc.op;
-                switch (opcode) 
-                {
-
-                }
-                break;
-            } 
-
-            case syscall_instr_type:    // system call instructions
-            {
-                opcode_type opcode = instruction.syscall.op;
-                switch (opcode) 
-                {
-                    
-                }
-                break;
             }
+            break;
+        }
 
-            case immed_instr_type:      // immediate instructions
+        case syscall_instr_type: // system call instructions
+        {
+            opcode_type opcode = instruction.syscall.op;
+            switch (opcode)
             {
-                opcode_type opcode = instruction.immed.op;
-                switch (opcode) 
-                {
-                    
-                }
-                break;
             }
+            break;
+        }
 
-            case jump_instr_type:       // jump instructions
+        case immed_instr_type: // immediate instructions
+        {
+            opcode_type opcode = instruction.immed.op;
+            switch (opcode)
             {
-                opcode_type opcode = instruction.jump.op;
-                switch (opcode) 
-                {
-                    
-                }
-                break;
             }
+            break;
+        }
 
-            case error_instr_type:      //  error instructions
+        case jump_instr_type: // jump instructions
+        {
+            opcode_type opcode = instruction.jump.op;
+            switch (opcode)
             {
-                fprintf(stderr, "Invalid instruction @ PC=%u", PC);
-                running = false;
-                break;
             }
+            break;
+        }
 
+        case error_instr_type: //  error instructions
+        {
+            fprintf(stderr, "Invalid instruction @ PC=%u", PC);
+            running = false;
+            break;
+        }
         }
 
         PC++;
