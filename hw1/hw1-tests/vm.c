@@ -355,14 +355,12 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case CALL_O:
-                memory.words[SP] = PC;                                         // Save current PC (return address) on the stack
-                SP--;                                                          // Decrement stack pointer
-                PC = machine_types_formAddress(PC - 1, instruction.jump.addr); // Jump to function address
+                RA = PC;
+                PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
                 break;
 
             case RTN_O:
-                SP++;                  // Increment stack pointer to get the return address
-                PC = memory.words[SP]; // Load the return address from the stack
+                PC = RA;
                 break;
             }
         }
