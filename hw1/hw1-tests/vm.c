@@ -7,6 +7,9 @@
 
 #define MEMORY_SIZE_IN_WORDS 32768
 
+static uword_type HI;
+static uword_type LO;
+
 static union mem_u
 {
     word_type words[MEMORY_SIZE_IN_WORDS];
@@ -156,8 +159,57 @@ void execute_instructions(BOFFILE bof)
             opcode_type opcode = instruction.othc.op;
             switch (opcode)
             {
+            case LIT_F:
+                memory.words[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] =
+                    machine_types_sgnExt(instruction.othc.arg);
+
+            case ARI_F:
+                instruction.othc.reg = instruction.othc.reg + machine_types_sgnExt(instruction.othc.arg);
+                break;
+
+            case SRI_F:
+                instruction.othc.reg = instruction.othc.reg - machine_types_sgnExt(instruction.othc.arg);
+                break;
+
+            case MUL_F:
+                // fetch operands
+                uword_type operand1 = memory.uwords[SP];                                                                  // top of the stack (memory[GPR[$sp]])
+                uword_type operand2 = memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]; // memory[GPR[s] + formOffset(o)]
+
+                // perform the multiplication, which results in a 64-bit value
+                uint64_t result = (uint64_t)operand1 * (uint64_t)operand2;
+
+                // store the most significant 32 bits of the result in HI
+                HI = (uword_type)(result >> 32);
+
+                // store the least significant 32 bits of the result in LO
+                LO = (uword_type)(result & 0xFFFFFFFF);
+
+                // decrement the stack pointer
+                SP--;
+                break;
+
+            case DIV_F:
+                // fetch operands
+                uword_type operand1 = memory.uwords[SP];                                                                  // top of the stack (memory[GPR[$sp]])
+                uword_type operand2 = memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]; // memory[GPR[s] + formOffset(o)]
+
+                // check for division by zero
+                if (operand2 == 0)
+                {
+                    fprintf(stderr, "Division by zero error @ PC=%u\n", PC);
+                    running = false; // stop execution
+                    break;
+                }
+
+                // perform the division
+                LO = operand1 / operand2; // store quotient in LO
+                HI = operand1 % operand2; // store remainder in HI
+
+                // cecrement the stack pointer
+                SP--;
+                break;
             }
-            break;
         }
 
         case syscall_instr_type: // system call instructions
