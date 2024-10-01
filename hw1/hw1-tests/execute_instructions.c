@@ -158,6 +158,20 @@ void execute_instructions(BOFFILE bof)
             opcode_type opcode = instruction.jump.op;
             switch (opcode)
             {
+            // formAddress is essentially just taking the upper 4 bits of PC, and adding it to memory words
+            case JMP_F:
+                PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
+                SP--;
+                break;
+
+            case CALL_O:
+                instruction.jump.addr = PC;
+                PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
+                break;
+
+            case RTN_O:
+                PC = instruction.jump.addr;
+                break;
             }
             break;
         }
