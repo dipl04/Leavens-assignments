@@ -84,8 +84,11 @@ void execute_instructions(BOFFILE bof)
 
             // registers
             printf("      PC: %d\n", PC);
-            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n", GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
-            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n", GPR[5], GPR[6], GPR[7]);
+            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n",
+                   GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
+
+            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n",
+                   GPR[5], GPR[6], GPR[7]);
 
             // data segment
             word_type addr = GPR[0]; // $gp
@@ -100,9 +103,31 @@ void execute_instructions(BOFFILE bof)
                 entries_printed++;
             }
             printf("    ...\n");
+
             printf("\n");
-            print_stack();
+
+            // print stack
+            word_type start_addr = GPR[1]; // $sp
+            word_type end_addr = GPR[2];   // $fp
+
+            if (start_addr > end_addr)
+            {
+                word_type temp = start_addr;
+                start_addr = end_addr;
+                end_addr = temp;
+            }
+
+            word_type addr = start_addr;
+            while (addr <= end_addr && addr < MEMORY_SIZE_IN_WORDS)
+            {
+                word_type value = memory.words[addr];
+                printf("    %d: %d\t", addr, value);
+                addr++;
+            }
             printf("\n");
+            printf("\n");
+
+            // assembly form at the end
             const char *instr_str = instruction_assembly_form(PC, instruction);
             printf("==>      %d: %s\n", PC, instr_str);
         }
@@ -290,16 +315,20 @@ void execute_instructions(BOFFILE bof)
             case exit_sc:
                 exit(machine_types_sgnExt(instruction.syscall.offset));
 
+            // GPR[1] is the stack pointer
             case print_str_sc:
-                memory.words[SP] = printf("%s", &memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)]);
-                SP--;
+                memory.words[GPR[1]] = printf("%s", &memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)]);
+                GPR[1]--;
+                break;
 
             case print_char_sc:
-                memory.words[SP] = fputc(memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)], stdout);
-                SP--;
+                memory.words[GPR[1]] = fputc(memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)], stdout);
+                GPR[1]--;
+                break;
 
             case read_char_sc:
-                memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+                memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+                break;
 
             case start_tracing_sc:
 
@@ -314,72 +343,74 @@ void execute_instructions(BOFFILE bof)
             switch (opcode)
             {
             case ADDI_O:
-                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
+                memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
                 break;
 
             case ANDI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case BORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case NORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
+                memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] =
+                    !(memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
                 break;
 
             case XORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
                 break;
 
+            // GPR[1] is the stack pointer
             case BEQ_O:
-                if (memory.words[SP] == memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                if (memory.words[GPR[1]] == memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
-                SP--;
+                GPR[1]--;
                 break;
 
             case BGEZ_O:
-                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) >= 0])
+                if (memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset) >= 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BGTZ_O:
-                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) > 0])
+                if (memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset) > 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BLEZ_O:
-                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) <= 0])
+                if (memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset) <= 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BLTZ_O:
-                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) < 0])
+                if (memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset) < 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
+            // GPR[1] is our stack pointer
             case BNE_O:
-                if (memory.words[SP] != memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                if (memory.words[GPR[1]] != memory.words[GPR[instruction.immed.reg] + machine_types_formOffset(instruction.immed.offset)])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
-                SP--;
+                GPR[1]--;
                 break;
             }
             break;
