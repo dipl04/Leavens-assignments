@@ -226,6 +226,73 @@ void execute_instructions(BOFFILE bof)
             opcode_type opcode = instruction.immed.op;
             switch (opcode)
             {
+            case ADDI_O:
+                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
+                break;
+
+            case ANDI_O:
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
+                break;
+
+            case BORI_O:
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
+                break;
+
+            case NORI_O:
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
+                break;
+
+            case XORI_O:
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
+                break;
+
+            case BEQ_O:
+                if(memory.words[SP] == memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
+            case BGEZ_O:
+                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) >= 0])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
+            case BGTZ_O:
+                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) > 0])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
+            case BLEZ_O:
+                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) <= 0])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
+            case BLTZ_O:
+                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) < 0])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
+            case BNE_O:
+                if(memory.words[SP] != memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                {
+                    PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
+                }
+                break;
+
             }
             break;
         }
