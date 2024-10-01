@@ -256,6 +256,7 @@ void execute_instructions(BOFFILE bof)
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
+                SP--;
                 break;
 
             case BGEZ_O:
@@ -291,6 +292,7 @@ void execute_instructions(BOFFILE bof)
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
+                SP--;
                 break;
 
             }
