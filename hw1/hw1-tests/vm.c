@@ -51,6 +51,7 @@ void execute_instructions(BOFFILE bof)
     // initialize PC and SP
     word_type PC = header.text_start_address;
     word_type SP = header.stack_bottom_addr;
+    word_type RA;
     word_type num_instructions = header.text_length;
 
     for (word_type i = 0; i < num_instructions; i++)
@@ -206,8 +207,53 @@ void execute_instructions(BOFFILE bof)
                 LO = operand1 / operand2; // store quotient in LO
                 HI = operand1 % operand2; // store remainder in HI
 
-                // cecrement the stack pointer
+                // decrement the stack pointer
                 SP--;
+                break;
+
+            case CFHI_F:
+                memory.words[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] = HI;
+                break;
+
+            case CFLO_F:
+                memory.words[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] = LO;
+                break;
+
+            case SLL_F:
+                memory.uwords[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] =
+                    memory.uwords[SP] << instruction.othc.arg;
+                SP--;
+                break;
+
+            case SRL_F:
+                memory.uwords[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] =
+                    memory.uwords[SP] >> instruction.othc.arg;
+                SP--;
+                break;
+
+            case JMP_F:
+                PC = memory.uwords[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)];
+                break;
+
+            case CSI_F:
+                RA = PC; // Save the current program counter (PC) into the return address (RA)
+
+                // calculate the new program counter (PC)
+                word_type target_address = instruction.othc.reg + machine_types_formOffset(instruction.othc.offset);
+
+                // check if the target address is within valid memory range
+                if (target_address < 0 || target_address >= MEMORY_SIZE_IN_WORDS)
+                {
+                    fprintf(stderr, "Error: Attempting to jump to an invalid address: %u\n", target_address);
+                    running = false; // stop execution
+                    break;
+                }
+
+                PC = memory.words[target_address]; // update PC to the new address
+                break;
+
+            case JREL_F:
+                PC = (PC - 1) + machine_types_formOffset(instruction.othc.offset);
                 break;
             }
         }
@@ -227,72 +273,71 @@ void execute_instructions(BOFFILE bof)
             switch (opcode)
             {
             case ADDI_O:
-                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
-                   memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
+                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
                 break;
 
             case ANDI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
-                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case BORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
-                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case NORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
-                   !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
+                    !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
                 break;
 
             case XORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
-                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
+                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case BEQ_O:
-                if(memory.words[SP] == memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                if (memory.words[SP] == memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BGEZ_O:
-                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) >= 0])
+                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) >= 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BGTZ_O:
-                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) > 0])
+                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) > 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BLEZ_O:
-                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) <= 0])
+                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) <= 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BLTZ_O:
-                if(memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) < 0])
+                if (memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset) < 0])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
 
             case BNE_O:
-                if(memory.words[SP] != memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
+                if (memory.words[SP] != memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)])
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
                 break;
-
             }
             break;
         }
