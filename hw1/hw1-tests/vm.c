@@ -9,6 +9,9 @@
 
 static uword_type HI;
 static uword_type LO;
+static word_type GPR[8];  // general Purpose Registers
+static word_type PC;      // program Counter
+bool tracing_enabled = true;
 
 static union mem_u
 {
@@ -48,11 +51,21 @@ void execute_instructions(BOFFILE bof)
     // read the bof header
     BOFHeader header = bof_read_header(bof);
 
-    // initialize PC and SP
-    word_type PC = header.text_start_address;
-    word_type SP = header.stack_bottom_addr;
-    word_type RA;
+
+    // // initialize PC and SP
+    // word_type GP = header.data_start_address;
+    // word_type PC = header.text_start_address;
+    // word_type SP = header.stack_bottom_addr;
+    // word_type RA;
     word_type num_instructions = header.text_length;
+
+    GPR[0] = header.data_start_address;    // $gp
+    GPR[1] = header.stack_bottom_addr;     // $sp
+    GPR[2] = header.stack_bottom_addr;     // $fp
+    GPR[3] = GPR[4] = GPR[5] = GPR[6] = 0;  // $r3 to $r6
+    GPR[7] = 0;                            // $ra
+    PC = header.text_start_address;
+
 
     for (word_type i = 0; i < num_instructions; i++)
     {
@@ -65,6 +78,35 @@ void execute_instructions(BOFFILE bof)
     {
         // fetch instruction from memory
         bin_instr_t instruction = memory.instrs[PC];
+
+        // trace current state
+        if (tracing_enabled)
+        {
+            // print output like his .out files
+
+            // registers
+            printf("      PC: %d\n", PC);
+            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n", GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
+            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n",GPR[5], GPR[6], GPR[7]);
+            
+            // data segment
+            word_type addr = GPR[0];  // $gp
+            int entries_printed = 0;
+            bool zeros_started = false;
+
+            while (addr < MEMORY_SIZE_IN_WORDS && entries_printed < 5)
+            {
+                word_type value = memory.words[addr];
+                printf("    %d: %d\t", addr, value);
+                addr++;
+                entries_printed++;
+            }
+            printf("    ...\n");            printf("\n");
+            print_stack();
+            printf("\n");
+            const char *instr_str = instruction_assembly_form(PC, instruction);
+            printf("==>      %d: %s\n", PC, instr_str);
+        }
 
         // first determine the type of instruction
         instr_type type = instruction_type(instruction);
@@ -263,6 +305,7 @@ void execute_instructions(BOFFILE bof)
             opcode_type opcode = instruction.syscall.op;
             switch (opcode)
             {
+
             case exit_sc:
                 exit(machine_types_sgnExt(instruction.syscall.offset));
             
