@@ -135,7 +135,6 @@ void execute_instructions(BOFFILE bof)
             // data segment
             word_type addr = GPR[0]; // $gp
             int entries_printed = 0;
-            bool zeros_started = false;
 
             while (addr < MEMORY_SIZE_IN_WORDS && entries_printed < 5)
             {
@@ -228,8 +227,8 @@ void execute_instructions(BOFFILE bof)
             case XOR_F:
                 memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.uwords[GPR[1]] ^ memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-            GPR[1]--;
-            break;
+                GPR[1]--;
+                break;
 
             case LWR_F:
                 GPR[instruction.comp.rt] =
@@ -282,14 +281,11 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case MUL_F:
-                // perform the multiplication, which results in a 64-bit value
-                uint64_t result = (uint64_t)memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-
                 // store the most significant 32 bits of the result in HI
-                HI = (uword_type)(result >> 32);
+                HI = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) >> 32;
 
                 // store the least significant 32 bits of the result in LO
-                LO = (uword_type)(result & 0xFFFFFFFF);
+                LO = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) & 0xFFFFFFFF;
 
                 // decrement the stack pointer
                 GPR[1]--;
@@ -384,7 +380,6 @@ void execute_instructions(BOFFILE bof)
             case stop_tracing_sc:
                 tracing_enabled = false;
                 break;
-            
             }
             break;
         }
