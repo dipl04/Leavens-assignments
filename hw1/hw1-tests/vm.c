@@ -338,13 +338,16 @@ void execute_instructions(BOFFILE bof)
             case print_str_sc:
                 memory.words[GPR[1]] = printf("%s", &memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)]);
                 GPR[1]--;
+                break;
 
             case print_char_sc:
                 memory.words[GPR[1]] = fputc(memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)], stdout);
                 GPR[1]--;
+                break;
 
             case read_char_sc:
                 memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+                break;
 
             case start_tracing_sc:
 
