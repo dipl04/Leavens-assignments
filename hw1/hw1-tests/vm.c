@@ -44,6 +44,48 @@ void print_bof(BOFFILE bof)
         // print the instruction
         printf("%u: %s\n", i + header.text_start_address, assembly_instruction);
     }
+
+    word_type data_start_addr = header.data_start_address;
+    word_type data_length = header.data_length;
+
+    if (data_length > 0)
+    {
+        word_type addr = data_start_addr;
+        word_type data_word;
+
+        for (word_type i = 0; i < data_length; i++)
+        {
+            data_word = bof_read_word(bof);
+
+            if (i == 0)
+            {
+                printf("%u: %d", addr, data_word);
+            }
+            else if (i < 4)
+            {
+                printf("\t%u: %d", addr, data_word);
+            }
+            addr++;
+
+            if (i == 3)
+            {
+                if (data_length > 4)
+                {
+                    printf("\t...\n");
+                }
+                else
+                {
+                    printf("\n");
+                }
+            }
+        }
+
+        // If data_length <= 4, ensure a newline is printed
+        if (data_length <= 4)
+        {
+            printf("\n");
+        }
+    }
 }
 
 void execute_instructions(BOFFILE bof)
@@ -150,69 +192,69 @@ void execute_instructions(BOFFILE bof)
             // once we know the instruction type, we can use information from the instruction's struct
             // see instruction.h.  Then, use the format on the ssm-vm.pdf file to run the operations.
             case ADD_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.words[SP] + memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
-                SP--;
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.words[GPR[1]] + memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
+                GPR[1]--; // $sp
                 break;
 
             case SUB_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.words[SP] - memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
-                SP--;
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.words[GPR[1]] - memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
+                GPR[1]--;
                 break;
 
             case CPW_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
                 break;
 
             case AND_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.uwords[SP] & (memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]);
-                SP--;
+                memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.uwords[GPR[1]] & memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
+                GPR[1]--;
                 break;
 
             case BOR_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.uwords[SP] | (memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]);
-                SP--;
+                memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.uwords[GPR[1]] | memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
+                GPR[1]--;
                 break;
 
             case NOR_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    ~memory.uwords[SP] | (memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]);
-                SP--;
+                memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    ~(memory.uwords[GPR[1]] | memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]);
+                GPR[1]--;
                 break;
 
             case XOR_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.uwords[SP] ^ (memory.uwords[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)]);
-                SP--;
-                break;
+                memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.uwords[GPR[1]] ^ memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
+            GPR[1]--;
+            break;
 
             case LWR_F:
-                instruction.comp.rt =
-                    memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
+                GPR[instruction.comp.rt] =
+                    memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
                 break;
 
             case SWR_F:
                 memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    instruction.comp.rs;
+                    GPR[instruction.comp.rs];
                 break;
 
             case SCA_F: // store computed address
                 memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    instruction.comp.rs + machine_types_formOffset(instruction.comp.os);
+                    GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os);
                 break;
 
             case LWI_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
+                    memory.words[memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]];
                 break;
 
             case NEG_F:
                 memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
-                    -memory.words[instruction.comp.rs + machine_types_formOffset(instruction.comp.os)];
+                    -memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
                 break;
 
             default:
@@ -333,22 +375,29 @@ void execute_instructions(BOFFILE bof)
 
             case exit_sc:
                 exit(machine_types_sgnExt(instruction.syscall.offset));
-            
+                break;
+
             case print_str_sc:
-                memory.words[SP] = printf("%s", &memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)]);
-                SP--;
+                memory.words[GPR[1]] = printf("%s", (char *)&memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)]);
+                GPR[1]--;
+                break;
 
             case print_char_sc:
-                memory.words[SP] = fputc(memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)], stdout);
-                SP--;
+                memory.words[GPR[1]] = fputc(memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)], stdout);
+                GPR[1]--;
+                break;
 
             case read_char_sc:
-                memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+                memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+                break;
 
             case start_tracing_sc:
+                tracing_enabled = true;
+                break;
 
             case stop_tracing_sc:
-
+                tracing_enabled = false;
+                break;
             
             }
             break;
