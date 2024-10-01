@@ -161,19 +161,19 @@ void execute_instructions(BOFFILE bof)
             // formAddress is essentially just taking the upper 4 bits of PC, and adding it to memory words
             case JMP_F:
                 PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
-                SP--;
                 break;
 
             case CALL_O:
-                instruction.jump.addr = PC;
-                PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
+                memory.words[SP] = PC;                                         // Save current PC (return address) on the stack
+                SP--;                                                          // Decrement stack pointer
+                PC = machine_types_formAddress(PC - 1, instruction.jump.addr); // Jump to function address
                 break;
 
             case RTN_O:
-                PC = instruction.jump.addr;
+                SP++;                  // Increment stack pointer to get the return address
+                PC = memory.words[SP]; // Load the return address from the stack
                 break;
             }
-            break;
         }
 
         case error_instr_type: //  error instructions
