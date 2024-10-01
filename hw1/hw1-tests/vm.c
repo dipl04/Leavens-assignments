@@ -86,8 +86,11 @@ void execute_instructions(BOFFILE bof)
 
             // registers
             printf("      PC: %d\n", PC);
-            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n", GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
-            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n",GPR[5], GPR[6], GPR[7]);
+            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n", 
+                      GPR[0],        GPR[1],        GPR[2],        GPR[3],        GPR[4]);
+
+            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n",
+                      GPR[5],        GPR[6],        GPR[7]); 
             
             // data segment
             word_type addr = GPR[0];  // $gp
@@ -101,9 +104,31 @@ void execute_instructions(BOFFILE bof)
                 addr++;
                 entries_printed++;
             }
-            printf("    ...\n");            printf("\n");
-            print_stack();
+            printf("    ...\n");            
             printf("\n");
+
+            // print stack
+            word_type start_addr = GPR[1];  // $sp
+            word_type end_addr = GPR[2];    // $fp
+
+            if (start_addr > end_addr)
+            {
+                word_type temp = start_addr;
+                start_addr = end_addr;
+                end_addr = temp;
+            }
+
+            word_type addr = start_addr;
+            while (addr <= end_addr && addr < MEMORY_SIZE_IN_WORDS)
+            {
+                word_type value = memory.words[addr];
+                printf("    %d: %d\t", addr, value);
+                addr++;
+            }
+            printf("\n");            
+            printf("\n");
+
+            // assembly form at the end
             const char *instr_str = instruction_assembly_form(PC, instruction);
             printf("==>      %d: %s\n", PC, instr_str);
         }
