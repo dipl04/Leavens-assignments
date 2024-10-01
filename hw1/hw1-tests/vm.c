@@ -263,6 +263,25 @@ void execute_instructions(BOFFILE bof)
             opcode_type opcode = instruction.syscall.op;
             switch (opcode)
             {
+            case exit_sc:
+                exit(machine_types_sgnExt(instruction.syscall.offset));
+            
+            case print_str_sc:
+                memory.words[SP] = printf("%s", &memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)]);
+                SP--;
+
+            case print_char_sc:
+                memory.words[SP] = fputc(memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)], stdout);
+                SP--;
+
+            case read_char_sc:
+                memory.words[instruction.syscall.reg + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
+
+            case start_tracing_sc:
+
+            case stop_tracing_sc:
+
+            
             }
             break;
         }
@@ -273,28 +292,28 @@ void execute_instructions(BOFFILE bof)
             switch (opcode)
             {
             case ADDI_O:
-                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
+                memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.words[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] + machine_types_sgnExt(instruction.immed.immed);
                 break;
 
             case ANDI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] & machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case BORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case NORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   !(memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] | machine_types_zeroExt(instruction.immed.immed));
                 break;
 
             case XORI_O:
-                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] =
-                    memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
+                memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] = 
+                   memory.uwords[instruction.immed.reg + machine_types_formOffset(instruction.immed.offset)] ^ machine_types_zeroExt(instruction.immed.immed);
                 break;
 
             case BEQ_O:
