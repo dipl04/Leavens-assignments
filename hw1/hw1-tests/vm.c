@@ -237,12 +237,12 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case SWR_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     GPR[instruction.comp.rs];
                 break;
 
             case SCA_F: // store computed address
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os);
                 break;
 
@@ -252,7 +252,7 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case NEG_F:
-                memory.words[instruction.comp.rt + machine_types_formOffset(instruction.comp.ot)] =
+                memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     -memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
                 break;
 
@@ -479,12 +479,12 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case CALL_O:
-                RA = PC;
+                GPR[7] = PC;
                 PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
                 break;
 
             case RTN_O:
-                PC = RA;
+                PC = GPR[7];
                 break;
             }
         }
