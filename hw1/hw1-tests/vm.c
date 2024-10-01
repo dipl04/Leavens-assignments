@@ -159,7 +159,7 @@ void execute_instructions(BOFFILE bof)
                 end_addr = temp;
             }
 
-            word_type addr = start_addr;
+            addr = start_addr;
             while (addr <= end_addr && addr < MEMORY_SIZE_IN_WORDS)
             {
                 word_type value = memory.words[addr];
