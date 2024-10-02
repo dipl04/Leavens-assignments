@@ -141,24 +141,40 @@ void execute_instructions(BOFFILE bof)
 
             // registers
             printf("      PC: %d\n", PC);
-            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d\n",
+            printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d    \n",
                    GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
 
-            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d\n",
+            printf("GPR[$r5]: %d \tGPR[$r6]: %d \tGPR[$ra]: %d    \n",
                    GPR[5], GPR[6], GPR[7]);
 
             // data segment
             word_type addr = GPR[0]; // $gp
             int entries_printed = 0;
+            bool should_print = true;
 
-            while (addr < MEMORY_SIZE_IN_WORDS && entries_printed < 5)
-            {
-                word_type value = memory.words[addr];
-                printf("    %d: %d\t", addr, value);
-                addr++;
-                entries_printed++;
+            for (word_type i = GPR[0]; i < GPR[1]; i++) {
+                word_type value = memory.words[i];
+                if (value != 0) {
+                    should_print = true;
+                }
+
+                if (should_print) {
+                    if (entries_printed % 5 == 0 && entries_printed != 0) {printf("\n");}
+                    if (value == 0) {
+                        should_print = false;
+                        printf("%8d: %d\t", i, value);
+                        entries_printed++;
+                        printf("        %s     ", "...");
+                        entries_printed++;
+                    }
+                    else {
+                        printf("%8d: %d\t", i, value);
+                        entries_printed++;
+                    }
+
+                }
             }
-            printf("\n        ...\n");
+            printf("\n");
 
             // print stack
             word_type start_addr = GPR[1]; // $sp
