@@ -1,3 +1,8 @@
+// Juan Larrain
+// Julia Moras
+// Kai Gerry
+// Jacob Legler
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -127,7 +132,6 @@ void execute_instructions(BOFFILE bof)
     }
 
     bool running = true;
-    int count = 0;
     while (running)
     {
         // fetch instruction from memory
@@ -140,7 +144,11 @@ void execute_instructions(BOFFILE bof)
             // print output like his .out files
 
             // registers
-            printf("      PC: %d\n", PC);
+            printf("      PC: %d", PC);
+            if (HI != 0 || LO != 0) {
+                printf("	      HI: %d	     LO: %d", HI, LO);
+            }
+            printf("\n");
             printf("GPR[$gp]: %d \tGPR[$sp]: %d \tGPR[$fp]: %d \tGPR[$r3]: %d \tGPR[$r4]: %d    \n",
                    GPR[0], GPR[1], GPR[2], GPR[3], GPR[4]);
 
@@ -362,28 +370,27 @@ void execute_instructions(BOFFILE bof)
 
             case MUL_F:
 
+                // FIXME:
                 // store the most significant 32 bits of the result in HI
-                HI = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) >> 32;
+                HI = (uword_type)(memory.uwords[GPR[1]] * ((uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)])) >> 31;
 
                 // store the least significant 32 bits of the result in LO
-                LO = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) & 0xFFFFFFFF;
-
-                // decrement the stack pointer
+                LO = (uword_type)(memory.words[GPR[1]] * ((uint64_t)memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)])) & 0xFFFFFFFF;
                 
                 break;
 
             case DIV_F:
                 // check for division by zero
-                if (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)] == 0)
-                {
-                    fprintf(stderr, "Division by zero error @ PC=%u\n", PC);
-                    running = false; // stop execution
-                    break;
-                }
+                // if (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)] == 0)
+                // {
+                //     fprintf(stderr, "Division by zero error @ PC=%u\n", PC);
+                //     running = false; // stop execution
+                //     break;
+                // }
 
                 // perform the division
-                LO = memory.uwords[GPR[1]] / memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]; // store quotient in LO
-                HI = memory.uwords[GPR[1]] % memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]; // store remainder in HI
+                LO = memory.uwords[GPR[1]] / (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]); // store quotient in LO
+                HI = memory.uwords[GPR[1]] % (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]); // store remainder in HI
 
                 // decrement the stack pointer
                 
@@ -553,7 +560,7 @@ void execute_instructions(BOFFILE bof)
             switch (opcode)
             {
             // formAddress is essentially just taking the upper 4 bits of PC, and adding it to memory words
-            case JMP_F:
+            case JMPA_O:
                 PC = machine_types_formAddress(PC - 1, instruction.jump.addr);
                 break;
 
@@ -583,6 +590,7 @@ void execute_instructions(BOFFILE bof)
         // printf("PC: %u\n", PC);
         // printf("tracing: %d\n", tracing_enabled);
         // printf("running: %d", running);
+        
     }
 }
 
