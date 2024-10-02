@@ -160,16 +160,26 @@ void execute_instructions(BOFFILE bof)
 
                 if (should_print) {
                     if (entries_printed % 5 == 0 && entries_printed != 0) {printf("\n");}
-                    if (value == 0) {
-                        should_print = false;
+                    if (value != 0) {
                         printf("%8d: %d\t", i, value);
                         entries_printed++;
-                        printf("        %s     ", "...");
-                        entries_printed++;
+                        continue;
                     }
-                    else {
-                        printf("%8d: %d\t", i, value);
-                        entries_printed++;
+                    else if (value == 0) {
+                        if (memory.words[i+1] == 0) {
+                            should_print = false;
+                            printf("%8d: %d\t", i, value);
+                            entries_printed++;
+                            if (entries_printed % 5 == 0 && entries_printed != 0) {printf("\n");}
+
+                            printf("        %s     ", "...");
+                            entries_printed++;
+                        }
+                        else
+                        {
+                            printf("%8d: %d\t", i, value);
+                            entries_printed++;
+                        }
                     }
 
                 }
@@ -177,23 +187,59 @@ void execute_instructions(BOFFILE bof)
             printf("\n");
 
             // print stack
-            word_type start_addr = GPR[1]; // $sp
-            word_type end_addr = GPR[2];   // $fp
+            entries_printed = 0;
+            should_print = true;
+            for (word_type i = GPR[1]; i <= GPR[2]; i++) {
+                word_type value = memory.words[i];
+                if (value != 0) {
+                    should_print = true;
+                }
 
-            if (start_addr > end_addr)
-            {
-                word_type temp = start_addr;
-                start_addr = end_addr;
-                end_addr = temp;
-            }
+                if (should_print) {
+                    if (entries_printed % 5 == 0 && entries_printed != 0) {printf("\n");}
+                    if (value != 0) {
+                        printf("%8d: %d\t", i, value);
+                        entries_printed++;
+                        continue;
+                    }
+                    else if (value == 0) {
+                        if (memory.words[i+1] == 0) {
+                            should_print = false;
+                            printf("%8d: %d\t", i, value);
+                            entries_printed++;
+                            if (entries_printed % 5 == 0 && entries_printed != 0) {printf("\n");}
 
-            addr = start_addr;
-            while (addr <= end_addr && addr < MEMORY_SIZE_IN_WORDS)
-            {
-                word_type value = memory.words[addr];
-                printf("    %d: %d\t", addr, value);
-                addr++;
+                            if (i != GPR[2]) {
+                                printf("        %s     ", "...");
+                            }
+                            entries_printed++;
+                        }
+                        else
+                        {
+                            printf("%8d: %d\t", i, value);
+                            entries_printed++;
+                        }
+                    }
+
+                }
             }
+            // word_type start_addr = GPR[1]; // $sp
+            // word_type end_addr = GPR[2];   // $fp
+
+            // if (start_addr > end_addr)
+            // {
+            //     word_type temp = start_addr;
+            //     start_addr = end_addr;
+            //     end_addr = temp;
+            // }
+
+            // addr = start_addr;
+            // while (addr <= end_addr && addr < MEMORY_SIZE_IN_WORDS)
+            // {
+            //     word_type value = memory.words[addr];
+            //     printf("    %d: %d\t", addr, value);
+            //     addr++;
+            // }
             printf("\n");
             printf("\n");
 
