@@ -107,20 +107,34 @@ void execute_instructions(BOFFILE bof)
     GPR[7] = 0;                            // $ra
     PC = header.text_start_address;
 
+    word_type data_start_addr = header.data_start_address;
+    word_type data_length = header.data_length;
+
+   
+
     for (word_type i = 0; i < num_instructions; i++)
     {
         // put all instructions in memory
         memory.instrs[header.text_start_address + i] = instruction_read(bof);
+        // const char *assembly_instruction = instruction_assembly_form(header.text_start_address + i, memory.instrs[header.text_start_address + i]);
+        // printf("i just read in:::: %s\n", assembly_instruction);
+
+    }
+
+    for (word_type i = 0; i < data_length; i++) {
+        memory.words[data_start_addr + i] = bof_read_word(bof);
+
     }
 
     bool running = true;
+    int count = 0;
     while (running)
     {
         // fetch instruction from memory
         bin_instr_t instruction = memory.instrs[PC];
         // printf("%d", instruction.syscall.op);
 
-        // trace current state
+         // trace current state
         if (tracing_enabled)
         {
             // print output like his .out files
@@ -144,9 +158,7 @@ void execute_instructions(BOFFILE bof)
                 addr++;
                 entries_printed++;
             }
-            printf("    ...\n");
-
-            printf("\n");
+            printf("\n        ...\n");
 
             // print stack
             word_type start_addr = GPR[1]; // $sp
@@ -174,9 +186,12 @@ void execute_instructions(BOFFILE bof)
             printf("==>      %d: %s\n", PC, instr_str);
         }
 
+
+
         // first determine the type of instruction
         instr_type type = instruction_type(instruction);
 
+        PC++;
         // now the logic depends on the type of instruction
         switch (type)
         {
@@ -193,13 +208,13 @@ void execute_instructions(BOFFILE bof)
             case ADD_F:
                 memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.words[GPR[1]] + memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-                GPR[1]--; // $sp
+                //  // $sp
                 break;
 
             case SUB_F:
                 memory.words[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.words[GPR[1]] - memory.words[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-                GPR[1]--;
+                // 
                 break;
 
             case CPW_F:
@@ -210,25 +225,25 @@ void execute_instructions(BOFFILE bof)
             case AND_F:
                 memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.uwords[GPR[1]] & memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-                GPR[1]--;
+                // 
                 break;
 
             case BOR_F:
                 memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.uwords[GPR[1]] | memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-                GPR[1]--;
+                // 
                 break;
 
             case NOR_F:
                 memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     ~(memory.uwords[GPR[1]] | memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]);
-                GPR[1]--;
+                // 
                 break;
 
             case XOR_F:
                 memory.uwords[GPR[instruction.comp.rt] + machine_types_formOffset(instruction.comp.ot)] =
                     memory.uwords[GPR[1]] ^ memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)];
-                GPR[1]--;
+                // 
                 break;
 
             case LWR_F:
@@ -258,13 +273,15 @@ void execute_instructions(BOFFILE bof)
 
             default:
                 printf("Uknown computation opcode...\n");
+                break;
             }
             break;
         }
 
-        // TODO: rest of them
         case other_comp_instr_type: // other computational instructions
         {
+            // printf("%d", other_comp_instr_type);
+            // printf("in other comp");
             func_type func = instruction.othc.func;
             switch (func)
             {
@@ -282,6 +299,7 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case MUL_F:
+
                 // store the most significant 32 bits of the result in HI
                 HI = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) >> 32;
 
@@ -289,11 +307,10 @@ void execute_instructions(BOFFILE bof)
                 LO = (uword_type)(memory.uwords[GPR[1]] * (uint64_t)memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]) & 0xFFFFFFFF;
 
                 // decrement the stack pointer
-                GPR[1]--;
+                
                 break;
 
             case DIV_F:
-                // printf("DIV");
                 // check for division by zero
                 if (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)] == 0)
                 {
@@ -307,7 +324,7 @@ void execute_instructions(BOFFILE bof)
                 HI = memory.uwords[GPR[1]] % memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)]; // store remainder in HI
 
                 // decrement the stack pointer
-                GPR[1]--;
+                
                 break;
 
             case CFHI_F:
@@ -319,15 +336,15 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case SLL_F:
-                memory.uwords[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] =
+                memory.uwords[GPR[instruction.othc.reg] + machine_types_formOffset(instruction.othc.offset)] =
                     memory.uwords[GPR[1]] << instruction.othc.arg;
-                GPR[1]--;
+                
                 break;
 
             case SRL_F:
-                memory.uwords[instruction.othc.reg + machine_types_formOffset(instruction.othc.offset)] =
+                memory.uwords[GPR[instruction.othc.reg] + machine_types_formOffset(instruction.othc.offset)] =
                     memory.uwords[GPR[1]] >> instruction.othc.arg;
-                GPR[1]--;
+                
                 break;
 
             case JMP_F:
@@ -343,47 +360,49 @@ void execute_instructions(BOFFILE bof)
             case JREL_F:
                 PC = (PC - 1) + machine_types_formOffset(instruction.othc.offset);
                 break;
+                
             }
+
+            break;
         }
 
         case syscall_instr_type: // system call instructions
         {
+            // printf("%d", syscall_instr_type);
+            // printf("in syscall\n");
             syscall_type code = instruction.syscall.code;
             switch (code)
             {
 
-            case exit_sc:
-                // printf("exit_sc");
-                running = false;
-                break;
 
             case print_str_sc:
                 memory.words[GPR[1]] = printf("%s", (char *)&memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)]);
-                GPR[1]--;
                 break;
 
             case print_char_sc:
                 memory.words[GPR[1]] = fputc(memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)], stdout);
-                GPR[1]--;
-                break;
-                memory.words[GPR[1]] = fputc(memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)], stdout);
-                GPR[1]--;
                 break;
 
             case read_char_sc:
                 memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
                 break;
-                memory.words[GPR[instruction.syscall.reg] + machine_types_formOffset(instruction.syscall.offset)] = getc(stdin);
-                break;
 
             case start_tracing_sc:
+                // printf("start tracing");
                 tracing_enabled = true;
                 break;
 
             case stop_tracing_sc:
+                // printf("stopped tracing");
                 tracing_enabled = false;
                 break;
+            
+            case exit_sc:
+                // printf("exit_sc");
+                running = false;
+                break;
             }
+            
             break;
         }
 
@@ -423,7 +442,7 @@ void execute_instructions(BOFFILE bof)
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
-                GPR[1]--;
+                
                 break;
 
             case BGEZ_O:
@@ -460,7 +479,7 @@ void execute_instructions(BOFFILE bof)
                 {
                     PC = (PC - 1) + machine_types_formOffset(instruction.immed.immed);
                 }
-                GPR[1]--;
+                
                 break;
             }
             break;
@@ -485,18 +504,20 @@ void execute_instructions(BOFFILE bof)
                 PC = GPR[7];
                 break;
             }
+            break;
         }
 
         case error_instr_type: //  error instructions
         {
-            // printf("error");
+            printf("error");
             fprintf(stderr, "Invalid instruction @ PC=%u", PC);
             running = false;
             break;
         }
         }
 
-        PC++;
+        // printf("incrementing PC, %d, %d", tracing_enabled, running);
+
         // printf("PC: %u\n", PC);
         // printf("tracing: %d\n", tracing_enabled);
         // printf("running: %d", running);
