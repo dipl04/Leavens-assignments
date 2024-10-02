@@ -118,6 +118,7 @@ void execute_instructions(BOFFILE bof)
     {
         // fetch instruction from memory
         bin_instr_t instruction = memory.instrs[PC];
+        // printf("%d", instruction.syscall.op);
 
         // trace current state
         if (tracing_enabled)
@@ -182,8 +183,8 @@ void execute_instructions(BOFFILE bof)
         // these are enums provided in instruction.h
         case comp_instr_type: // computational instructions
         {
-            opcode_type opcode = instruction.comp.op;
-            switch (opcode)
+            func_type func = instruction.comp.func;
+            switch (func)
             {
             case NOP_F:
                 break;
@@ -264,8 +265,8 @@ void execute_instructions(BOFFILE bof)
         // TODO: rest of them
         case other_comp_instr_type: // other computational instructions
         {
-            opcode_type opcode = instruction.othc.op;
-            switch (opcode)
+            func_type func = instruction.othc.func;
+            switch (func)
             {
             case LIT_F:
                 memory.words[GPR[instruction.othc.reg] + machine_types_formOffset(instruction.othc.offset)] =
@@ -292,6 +293,7 @@ void execute_instructions(BOFFILE bof)
                 break;
 
             case DIV_F:
+                // printf("DIV");
                 // check for division by zero
                 if (memory.uwords[GPR[instruction.comp.rs] + machine_types_formOffset(instruction.comp.os)] == 0)
                 {
@@ -346,12 +348,13 @@ void execute_instructions(BOFFILE bof)
 
         case syscall_instr_type: // system call instructions
         {
-            opcode_type opcode = instruction.syscall.op;
-            switch (opcode)
+            syscall_type code = instruction.syscall.code;
+            switch (code)
             {
 
             case exit_sc:
-                exit(machine_types_sgnExt(instruction.syscall.offset));
+                // printf("exit_sc");
+                running = false;
                 break;
 
             case print_str_sc:
@@ -486,6 +489,7 @@ void execute_instructions(BOFFILE bof)
 
         case error_instr_type: //  error instructions
         {
+            // printf("error");
             fprintf(stderr, "Invalid instruction @ PC=%u", PC);
             running = false;
             break;
@@ -493,6 +497,9 @@ void execute_instructions(BOFFILE bof)
         }
 
         PC++;
+        // printf("PC: %u\n", PC);
+        // printf("tracing: %d\n", tracing_enabled);
+        // printf("running: %d", running);
     }
 }
 
