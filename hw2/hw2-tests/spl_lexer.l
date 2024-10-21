@@ -79,14 +79,176 @@ static void number2ast(unsigned int val)
  /* you can add actual definitions below, before the %% */
 
 
-
- /* the rules section starts after the %% below */
+ /* our rules are below JL */
 
 %%
 
- /* fill in the rules for your lexer below! */
+[a-zA-Z][a-zA-Z0-9]* { 
+    if (strcmp(yytext, "const") == 0) {
+        tok2ast(constsym);
+        return constsym;
+    }
+    if (strcmp(yytext, "var") == 0) {
+        tok2ast(varsym);
+        return varsym;
+    }
+    if (strcmp(yytext, "proc") == 0) {
+        tok2ast(procsym);
+        return procsym;
+    }
+    if (strcmp(yytext, "call") == 0) {
+        tok2ast(callsym);
+        return callsym;
+    }
+    if (strcmp(yytext, "begin") == 0) {
+        tok2ast(beginsym);
+        return beginsym;
+    }
+    if (strcmp(yytext, "end") == 0) {
+        tok2ast(endsym);
+        return endsym;
+    }
+    if (strcmp(yytext, "if") == 0) {
+        tok2ast(ifsym);
+        return ifsym;
+    }
+    if (strcmp(yytext, "then") == 0) {
+        tok2ast(thensym);
+        return thensym;
+    }
+    if (strcmp(yytext, "else") == 0) {
+        tok2ast(elsesym);
+        return elsesym;
+    }
+    if (strcmp(yytext, "while") == 0) {
+        tok2ast(whilesym);
+        return whilesym;
+    }
+    if (strcmp(yytext, "do") == 0) {
+        tok2ast(dosym);
+        return dosym;
+    }
+    if (strcmp(yytext, "read") == 0) {
+        tok2ast(readsym);
+        return readsym;
+    }
+    if (strcmp(yytext, "print") == 0) {
+        tok2ast(printsym);
+        return printsym;
+    }
+    if (strcmp(yytext, "divisible") == 0) {
+        tok2ast(divisiblesym);
+        return divisiblesym;
+    }
+    if (strcmp(yytext, "by") == 0) {
+        tok2ast(bysym);
+        return bysym;
+    }
+    ident2ast(yytext); 
+    return identsym; 
+}
 
-/* $Id: spl_lexer_user_code.c,v 1.4 2024/10/06 18:43:01 leavens Exp leavens $ */
+[0-9]+ { 
+    number2ast(atoi(yytext)); 
+    return numbersym; 
+}
+
+"+" { 
+    tok2ast(plussym); 
+    return plussym; 
+}
+
+"-" { 
+    tok2ast(minussym); 
+    return minussym; 
+}
+
+"*" { 
+    tok2ast(multsym); 
+    return multsym; 
+}
+
+"/" { 
+    tok2ast(divsym); 
+    return divsym; 
+}
+
+"." { 
+    tok2ast(periodsym); 
+    return periodsym; 
+}
+
+";" { 
+    tok2ast(semisym); 
+    return semisym; 
+}
+
+"=" { 
+    tok2ast(eqsym); 
+    return eqsym; 
+}
+
+"," { 
+    tok2ast(commasym); 
+    return commasym; 
+}
+
+":=" { 
+    tok2ast(becomessym); 
+    return becomessym; 
+}
+
+"(" { 
+    tok2ast(lparensym); 
+    return lparensym; 
+}
+
+")" { 
+    tok2ast(rparensym); 
+    return rparensym; 
+}
+
+"==" { 
+    tok2ast(eqeqsym); 
+    return eqeqsym; 
+}
+
+"!=" { 
+    tok2ast(neqsym); 
+    return neqsym; 
+}
+
+"<=" { 
+    tok2ast(leqsym); 
+    return leqsym; 
+}
+
+">=" { 
+    tok2ast(geqsym); 
+    return geqsym; 
+}
+
+"<" { 
+    tok2ast(ltsym); 
+    return ltsym; 
+}
+
+">" { 
+    tok2ast(gtsym); 
+    return gtsym; 
+}
+
+[ \t\n]+ { 
+    /* Ignore whitespace */ 
+}
+
+'.' { 
+    yyerror(input_filename, "Unrecognized character"); 
+}
+
+'#' { 
+    yyerror(input_filename, "Unrecognized character"); 
+}
 
 %%
 
