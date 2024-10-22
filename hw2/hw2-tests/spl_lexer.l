@@ -81,6 +81,7 @@ static void number2ast(unsigned int val)
 IDENT		    {LETTER}({LETTERORDIGIT}*)
 LETTER		    [_a-zA-Z]
 NUMBER          {DIGIT}({DIGIT}*)
+DIGIT           [0-9]
 LETTERORDIGIT   ({LETTER}|{DIGIT})
 IGNORED         ({BLANK}|{TAB}|{VT}|{FORMFEED}|{EOL}|{COMMENT})
 BLANK           [ ]
@@ -97,8 +98,6 @@ COMMENT         {PERCENT}.*{NEWLINE}
 
 %%
 {IGNORED}       { ; }
-{COMMENT}       { ; }
-{IDENT}         { ident2ast(yytext); return identsym; }
 {NUMBER}        { number2ast(numbersym); return numbersym; }
 
 \+              { tok2ast(plussym); return plussym; }
@@ -135,6 +134,8 @@ do              { tok2ast(dosym); return dosym; }
 print           { tok2ast(printsym); return printsym; }
 divisible       { tok2ast(divisiblesym); return divisiblesym }
 by              { tok2ast(bysym); return bysym };
+
+{IDENT}         { ident2ast(yytext); return identsym; }
 
     . { formatted_yyerror(filename,
                         "invalid character: '%c' ('\\0%o')",
