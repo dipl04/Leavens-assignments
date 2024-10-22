@@ -264,15 +264,13 @@ static void number2ast(unsigned int val)
 }
 
 [ \t\n]+ { 
-    /* Ignore whitespace */ 
+    // Ignore whitespaces 
 }
 
-'.' { 
-    yyerror(input_filename, "Unrecognized character"); 
-}
-
-'#' { 
-    yyerror(input_filename, "Unrecognized character"); 
+. {
+	char myString[100];
+	sprintf(myString, "invalid character: '%c' ('\\0%o')", yytext, yytext);
+    	yyerror(input_filename, myString); 
 }
 
 %%
