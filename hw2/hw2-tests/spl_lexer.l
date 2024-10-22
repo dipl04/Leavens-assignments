@@ -77,205 +77,65 @@ static void number2ast(unsigned int val)
 %}
 
  /* you can add actual definitions below, before the %% */
-
+ /* SPL GRAMMAR */
+IDENT		    {LETTER}({LETTERORDIGIT}*)
+LETTER		    [_a-zA-Z]
+NUMBER          {DIGIT}({DIGIT}*)
+LETTERORDIGIT   ({LETTER}|{DIGIT})
+IGNORED         ({BLANK}|{TAB}|{VT}|{FORMFEED}|{EOL}|{COMMENT})
+BLANK           [ ]
+TAB             \t
+VT              \v
+FORMFEED        \f
+NEWLINE         \n
+CR              \r
+EOL             {NEWLINE}|({CR}{NEWLINE})
+PERCENT         %
+COMMENT         {PERCENT}.*{NEWLINE}
 
  /* our rules are below JL */
 
 %%
 
-["const"|"var"|"proc"|"call"|"begin"|"end"|"if"|"then"|"else"|"while"|"do"|"read"|"print"|"divisible"|"by"] {
-	
-	if (strcmp(yytext, "const") == 0) {
-      tok2ast(constsym);
-      return constsym;
-  }
+\+              { tok2ast(plussym); return plussym; }
+-               { tok2ast(minussym); return minussym; }
+\*              { tok2ast(multsym); return multsym; }
+\/              { tok2ast(divsym); return divsym; }  
+\;              { tok2ast(semisym); return semisym; }
+,               { tok2ast(commasym); return commasym; }
+\.              { tok2ast(periodsym); return periodsym; }
+:=              { tok2ast(becomessym); return becomessym; }
+==              { tok2ast(eqsym); return eqsym; }
+=               { tok2ast(becomessym); return becomessym; }
+!=              { tok2ast(neqsym); return neqsym; }
+!               { tok2ast(notsym); return notsym; }
+\<=             { tok2ast(leqsym); return leqsym; }
+\>=             { tok2ast(geqsym); return geqsym; }
+\>              { tok2ast(gtsym); return gtsym; }
+\<              { tok2ast(ltsym); return ltsym; }
+\(              { tok2ast(lparensym); return lparensym; }
+\)              { tok2ast(rparensym); return rparensym; }
 
-  if (strcmp(yytext, "var") == 0) {
-      tok2ast(varsym);
-      return varsym;
-  }
+if              { tok2ast(ifsym); return ifsym; }
+read            { tok2ast(readsym); return readsym; }
+const           { tok2ast(constsym); return constsym; }
+var             { tok2ast(varsym); return varsym; }
+proc            { tok2ast(procsym); return procsym; }
+call            { tok2ast(callsym); return callsym; }
+begin           { tok2ast(beginsym); return beginsym; }
+end             { tok2ast(endsym); return endsym; }
+then            { tok2ast(thensym); return thensym; }
+else            { tok2ast(elsesym); return elsesym; }
+while           { tok2ast(elsesym); return elsesym; }
+do              { tok2ast(dosym); return dosym; }
+print           { tok2ast(printsym); return printsym; }
+divisible       { tok2ast(divisiblesym); return divisiblesym }
+by              { tok2ast(bysym); return bysym };
 
-  if (strcmp(yytext, "proc") == 0) {
-      tok2ast(procsym);
-      return procsym;
-  }
-
-  if (strcmp(yytext, "call") == 0) {
-      tok2ast(callsym);
-      return callsym;
-  }
-
-  if (strcmp(yytext, "begin") == 0) {
-      tok2ast(beginsym);
-      return beginsym;
-  }
-
-  if (strcmp(yytext, "end") == 0) {
-      tok2ast(endsym);
-      return endsym;
-  }
-
-  if (strcmp(yytext, "if") == 0) {
-      tok2ast(ifsym);
-      return ifsym;
-  }
-
-  if (strcmp(yytext, "then") == 0) {
-      tok2ast(thensym);
-      return thensym;
-  }
-
-  if (strcmp(yytext, "else") == 0) {
-      tok2ast(elsesym);
-      return elsesym;
-  }
-
-  if (strcmp(yytext, "while") == 0) {
-			tok2ast(whilesym);
-      return whilesym;
-  }
-
-  if (strcmp(yytext, "do") == 0) {
-      tok2ast(dosym);
-      return dosym;
-  }
-
-  if (strcmp(yytext, "read") == 0) {
-      tok2ast(readsym);
-    	return readsym;
-	}
-
-  if (strcmp(yytext, "print") == 0) {
-      tok2ast(printsym);
-      return printsym;
-  }
-
-  if (strcmp(yytext, "divisible") == 0) {
-      tok2ast(divisiblesym);
-      return divisiblesym;
-  }
-
-  if (strcmp(yytext, "by") == 0) {
-      tok2ast(bysym);
-      return bysym;
-  }
-
-  ident2ast(yytext); 
-  return identsym; 
-}
-
-[a-z]+ {
-	ident2ast(yytext);
-	return identsym;
-}
-
-[0-9]+ { 
-  number2ast(atoi(yytext)); 
-  return numbersym; 
-}
-
-["+"|"-"|"*"|"/"|"."|";"|"="|","|":="|"("|")"|"=="|"!="|"<"|">"|"<="|">="] {
-
-	if (strcmp(yytext, "+") == 0) {
-		tok2ast(plussym);
-		return plussym;
-	}
-
-	if (strcmp(yytext, "-") == 0) {
-		tok2ast(minussym);
-		return minussym;
-	}
-
-	if (strcmp(yytext, "*") == 0) {
-		tok2ast(multsym);
-		return multsym;
-	}
-
-	if (strcmp(yytext, "/") == 0) {
-		tok2ast(divsym);
-		return divsym;
-	}
-
-	if (strcmp(yytext, "+") == 0) {
-		tok2ast(plussym);
-		return plussym;
-	}
-
-	if (strcmp(yytext, ".") == 0) {
-		tok2ast(periodsym);
-		return periodsym;
-	}
-
-	if (strcmp(yytext, ";") == 0) {
-		tok2ast(semisym);
-		return semisym;
-	}
-
-	if (strcmp(yytext, "=") == 0) {
-		tok2ast(eqsym);
-		return eqsym;
-	}
-
-	if (strcmp(yytext, ",") == 0) {
-		tok2ast(commasym);
-		return commasym;
-	}
-
-	if (strcmp(yytext, ":=") == 0) {
-		tok2ast(becomessym);
-		return becomessym;
-	}
-
-	if (strcmp(yytext, "(") == 0) {
-		tok2ast(lparensym);
-		return lparensym;
-	}
-
-	if (strcmp(yytext, ")") == 0) {
-		tok2ast(rparensym);
-		return rparensym;
-	}
-
-	if (strcmp(yytext, "==") == 0) {
-		tok2ast(eqeqsym);
-		return eqeqsym;
-	}
-
-	if (strcmp(yytext, "!=") == 0) {
-		tok2ast(neqsym);
-		return neqsym;
-	}
-
-	if (strcmp(yytext, "<") == 0) {
-		tok2ast(ltsym);
-		return ltsym;
-	}
-
-	if (strcmp(yytext, ">") == 0) {
-		tok2ast(gtsym);
-		return gtsym;
-	}
-
-	if (strcmp(yytext, "<=") == 0) {
-		tok2ast(leqsym);
-		return leqsym;
-	}
-
-	if (strcmp(yytext, ">=") == 0) {
-		tok2ast(geqsym);
-		return geqsym;
-	}
-}
-
-[ \t\n]+ {
-
-}
-
-. {
-	char myString[100];
-	sprintf(myString, "invalid character: '%c' ('\\0%o')", yytext, yytext);
-  yyerror(input_filename, myString); 
-}
+ . { formatted_yyerror(filename,
+                        "invalid character: '%c' ('\\0%o')",
+                        *yytext, *yytext);
+    }
 
 %%
 
