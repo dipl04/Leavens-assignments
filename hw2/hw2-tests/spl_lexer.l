@@ -85,6 +85,7 @@ static void number2ast(unsigned int val)
 %%
 
 ["const"|"var"|"proc"|"call"|"begin"|"end"|"if"|"then"|"else"|"while"|"do"|"read"|"print"|"divisible"|"by"] {
+	
 	if (strcmp(yytext, "const") == 0) {
       tok2ast(constsym);
       return constsym;
