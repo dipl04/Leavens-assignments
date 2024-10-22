@@ -96,6 +96,10 @@ COMMENT         {PERCENT}.*{NEWLINE}
  /* our rules are below JL */
 
 %%
+{IGNORED}       { ; }
+{COMMENT}       { ; }
+{IDENT}         { ident2ast(yytext); return identsym; }
+{NUMBER}        { number2ast(numbersym); return numbersym; }
 
 \+              { tok2ast(plussym); return plussym; }
 -               { tok2ast(minussym); return minussym; }
@@ -132,7 +136,7 @@ print           { tok2ast(printsym); return printsym; }
 divisible       { tok2ast(divisiblesym); return divisiblesym }
 by              { tok2ast(bysym); return bysym };
 
- . { formatted_yyerror(filename,
+    . { formatted_yyerror(filename,
                         "invalid character: '%c' ('\\0%o')",
                         *yytext, *yytext);
     }
