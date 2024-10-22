@@ -89,85 +89,90 @@ static void number2ast(unsigned int val)
 	if (strcmp(yytext, "const") == 0) {
         	tok2ast(constsym);
         	return constsym;
-    	}
+  }
 
-    	if (strcmp(yytext, "var") == 0) {
-       		tok2ast(varsym);
-        	return varsym;
-    	}
+  if (strcmp(yytext, "var") == 0) {
+      tok2ast(varsym);
+      return varsym;
+  }
 
-    	if (strcmp(yytext, "proc") == 0) {
-        	tok2ast(procsym);
-        	return procsym;
-    	}
+  if (strcmp(yytext, "proc") == 0) {
+      tok2ast(procsym);
+      return procsym;
+  }
 
-    	if (strcmp(yytext, "call") == 0) {
-        	tok2ast(callsym);
-        	return callsym;
-   	 }
+  if (strcmp(yytext, "call") == 0) {
+      tok2ast(callsym);
+      return callsym;
+  }
 
-    	if (strcmp(yytext, "begin") == 0) {
-        	tok2ast(beginsym);
-        	return beginsym;
-    	}
+  if (strcmp(yytext, "begin") == 0) {
+      tok2ast(beginsym);
+      return beginsym;
+  }
 
-    	if (strcmp(yytext, "end") == 0) {
-        	tok2ast(endsym);
-        	return endsym;
-    	}
+  if (strcmp(yytext, "end") == 0) {
+      tok2ast(endsym);
+      return endsym;
+  }
 
-    	if (strcmp(yytext, "if") == 0) {
-        	tok2ast(ifsym);
-        	return ifsym;
-    	}
+  if (strcmp(yytext, "if") == 0) {
+      tok2ast(ifsym);
+      return ifsym;
+  }
 
-   	if (strcmp(yytext, "then") == 0) {
-        	tok2ast(thensym);
-        	return thensym;
-    	}
+  if (strcmp(yytext, "then") == 0) {
+      tok2ast(thensym);
+      return thensym;
+  }
 
-    	if (strcmp(yytext, "else") == 0) {
-        	tok2ast(elsesym);
-        	return elsesym;
-    	}
+  if (strcmp(yytext, "else") == 0) {
+      tok2ast(elsesym);
+      return elsesym;
+  }
 
-    	if (strcmp(yytext, "while") == 0) {
-		tok2ast(whilesym);
-        	return whilesym;
-    	}
+  if (strcmp(yytext, "while") == 0) {
+			tok2ast(whilesym);
+      return whilesym;
+  }
 
-    	if (strcmp(yytext, "do") == 0) {
-        	tok2ast(dosym);
-        	return dosym;
-    	}
+  if (strcmp(yytext, "do") == 0) {
+      tok2ast(dosym);
+      return dosym;
+  }
 
-    	if (strcmp(yytext, "read") == 0) {
-        	tok2ast(readsym);
-        	return readsym;
-    	}
+  if (strcmp(yytext, "read") == 0) {
+      tok2ast(readsym);
+    	return readsym;
+	}
 
-    	if (strcmp(yytext, "print") == 0) {
-        	tok2ast(printsym);
-        	return printsym;
-    	}
+  if (strcmp(yytext, "print") == 0) {
+      tok2ast(printsym);
+      return printsym;
+  }
 
-    	if (strcmp(yytext, "divisible") == 0) {
-        	tok2ast(divisiblesym);
-        	return divisiblesym;
-    	}
+  if (strcmp(yytext, "divisible") == 0) {
+      tok2ast(divisiblesym);
+      return divisiblesym;
+  }
 
-    	if (strcmp(yytext, "by") == 0) {
-        	tok2ast(bysym);
-        	return bysym;
-    	}
+  if (strcmp(yytext, "by") == 0) {
+      tok2ast(bysym);
+      return bysym;
+  }
 
-    	ident2ast(yytext); 
-    	return identsym; 
+  ident2ast(yytext); 
+  return identsym; 
+}
+
+[a-z]+ {
+	ident2ast(yytext);
+	return identsym;
 }
 
 [0-9]+ { 
-    number2ast(atoi(yytext)); 
-    return numbersym; 
+  number2ast(atoi(yytext)); 
+  return numbersym; 
 }
 
 ["+"|"-"|"*"|"/"|"."|";"|"="|","|":="|"("|")"|"=="|"!="|"<"|">"|"<="|">="] {
@@ -263,14 +268,14 @@ static void number2ast(unsigned int val)
 	}
 }
 
-[ \t\n]+ { 
-    // Ignore whitespaces 
+[ \t\n]+ {
+
 }
 
 . {
 	char myString[100];
 	sprintf(myString, "invalid character: '%c' ('\\0%o')", yytext, yytext);
-    	yyerror(input_filename, myString); 
+  yyerror(input_filename, myString); 
 }
 
 %%
@@ -282,42 +287,40 @@ static void number2ast(unsigned int val)
 // Requires: fname is the name of a readable file
 // Initialize the lexer and start it reading
 // from the given file name
-void lexer_init(char *fname)
-{
-    errors_noted = false;
-    yyin = fopen(fname, "r");
-    if (yyin == NULL) {
-	bail_with_error("Cannot open %s", fname);
-    }
-    input_filename = fname;
+void lexer_init(char *fname) {
+  errors_noted = false;
+  yyin = fopen(fname, "r");
+  if (yyin == NULL) {
+		bail_with_error("Cannot open %s", fname);
+  }
+  input_filename = fname;
 }
 
 // Close the file yyin
 // and return 0 to indicate that there are no more files
 int yywrap() {
-    if (yyin != NULL) {
-	int rc = fclose(yyin);
-	if (rc == EOF) {
+  if (yyin != NULL) {
+		int rc = fclose(yyin);
+		if (rc == EOF) {
 	    bail_with_error("Cannot close %s!", input_filename);
-	}
-    }
-    input_filename = NULL;
-    return 1;  /* no more input */
+		}
+  }
+  input_filename = NULL;
+  return 1;  /* no more input */
 }
 
 // Return the name of the current input file
 const char *lexer_filename() {
-    return input_filename;
+  return input_filename;
 }
 
 // Return the line number of the next token
 unsigned int lexer_line() {
-    return yylineno;
+  return yylineno;
 }
 
 /* Report an error to the user on stderr */
-void yyerror(const char *filename, const char *msg)
-{
+void yyerror(const char *filename, const char *msg) {
     fflush(stdout);
     fprintf(stderr, "%s:%d: %s\n", input_filename, lexer_line(), msg);
     errors_noted = true;
