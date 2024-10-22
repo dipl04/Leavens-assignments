@@ -79,7 +79,7 @@ static void number2ast(unsigned int val)
  /* you can add actual definitions below, before the %% */
  /* SPL GRAMMAR */
 IDENT		    {LETTER}({LETTERORDIGIT}*)
-LETTER		    [_a-zA-Z]
+LETTER		    [a-zA-Z]
 NUMBER          {DIGIT}({DIGIT}*)
 DIGIT           [0-9]
 LETTERORDIGIT   ({LETTER}|{DIGIT})
@@ -98,7 +98,15 @@ COMMENT         {PERCENT}.*{NEWLINE}
 
 %%
 {IGNORED}       { ; }
-{NUMBER}        { number2ast(numbersym); return numbersym; }
+{NUMBER}        { 
+                    long long int num;
+                    sscanf(yytext, "%lld", &num);
+                    if (num > INT_MAX) {
+                        formatted_yyerror(lexer_filename(),
+                        "Number (%s) is too large!",
+                        yytext);
+                    }
+                    number2ast(numbersym); return numbersym; }
 
 \+              { tok2ast(plussym); return plussym; }
 -               { tok2ast(minussym); return minussym; }
@@ -108,10 +116,9 @@ COMMENT         {PERCENT}.*{NEWLINE}
 ,               { tok2ast(commasym); return commasym; }
 \.              { tok2ast(periodsym); return periodsym; }
 :=              { tok2ast(becomessym); return becomessym; }
-==              { tok2ast(eqsym); return eqsym; }
-=               { tok2ast(becomessym); return becomessym; }
+==              { tok2ast(eqeqsym); return eqeqsym; }
+=               { tok2ast(eqsym); return eqsym; }
 !=              { tok2ast(neqsym); return neqsym; }
-!               { tok2ast(notsym); return notsym; }
 \<=             { tok2ast(leqsym); return leqsym; }
 \>=             { tok2ast(geqsym); return geqsym; }
 \>              { tok2ast(gtsym); return gtsym; }
@@ -129,15 +136,14 @@ begin           { tok2ast(beginsym); return beginsym; }
 end             { tok2ast(endsym); return endsym; }
 then            { tok2ast(thensym); return thensym; }
 else            { tok2ast(elsesym); return elsesym; }
-while           { tok2ast(elsesym); return elsesym; }
+while           { tok2ast(whilesym); return whilesym; }
 do              { tok2ast(dosym); return dosym; }
 print           { tok2ast(printsym); return printsym; }
-divisible       { tok2ast(divisiblesym); return divisiblesym }
-by              { tok2ast(bysym); return bysym };
+divisible       { tok2ast(divisiblesym); return divisiblesym; }
+by              { tok2ast(bysym); return bysym; };
 
 {IDENT}         { ident2ast(yytext); return identsym; }
-
-    . { formatted_yyerror(filename,
+    . { formatted_yyerror(lexer_filename(),
                         "invalid character: '%c' ('\\0%o')",
                         *yytext, *yytext);
     }
