@@ -80,7 +80,6 @@ static void number2ast(unsigned int val)
 
 
  /* our rules are below JL */
-// reserved words rules below JM
 
 %%
 
