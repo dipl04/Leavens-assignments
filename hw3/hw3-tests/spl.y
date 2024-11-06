@@ -118,7 +118,26 @@ extern void setProgAST(block_t t);
 %%
  /* Write your grammar rules below and before the next %% */
 
+program : block periodsym { setProgAST($1); }
+        ;
+        
+block : beginsym constDecls varDecls procDecls stmts endsym
+      { $$ = ast_block($1, $2, $3, $4, $5); }
+      ;
 
+constDecls : /* empty */ { $$ = ast_const_decls_empty(ast_empty(yylocation)); }
+           | constDecls constDecl { $$ = ast_const_decls($1, $2); }
+           ;
+
+constDecl : constsym constDefList semisym { $$ = ast_const_decl($2); }
+          ;
+
+constDefList : constDef { $$ = ast_const_def_list_singleton($1); }
+             | constDefList commasym constDef { $$ = ast_const_def_list($1, $3); }
+             ;
+
+constDef : identsym eqsym numbersym { $$ = ast_const_def(ast_ident(yylocation, $1), ast_expr_number($3)); }
+         ;
 
 
 
