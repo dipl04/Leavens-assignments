@@ -139,7 +139,95 @@ constDefList : constDef { $$ = ast_const_def_list_singleton($1); }
 constDef : identsym eqsym numbersym { $$ = ast_const_def(ast_ident(yylocation, $1), ast_expr_number($3)); }
          ;
 
+varDecls : /* empty */ { $$ = ast_var_decls_empty(ast_empty(yylocation)); }
+         | varDecls varDecl { $$ = ast_var_decls($1, $2); }
+         ;
 
+varDecl : varsym identList semisym { $$ = ast_var_decl($2); }
+        ;
+
+identList : identsym { $$ = ast_ident_list_singleton(ast_ident(yylocation, $1)); }
+          | identList commasym identsym { $$ = ast_ident_list($1, ast_ident(yylocation, $3)); }
+          ;
+
+procDecls : /* empty */ { $$ = ast_proc_decls_empty(ast_empty(yylocation)); }
+          | procDecls procDecl { $$ = ast_proc_decls($1, $2); }
+          ;
+
+procDecl : procsym identsym block semisym { $$ = ast_proc_decl(ast_ident(yylocation, $2), $3); }
+         ;
+
+stmts : /* empty */ { $$ = ast_stmts_empty(ast_empty(yylocation)); }
+      | stmtList { $$ = ast_stmts($1); }
+      ;
+
+stmtList : stmt { $$ = ast_stmt_list_singleton($1); }
+         | stmtList semisym stmt { $$ = ast_stmt_list($1, $3); }
+         ;
+
+stmt : assignStmt { $$ = ast_stmt_assign($1); }
+     | callStmt { $$ = ast_stmt_call($1); }
+     | ifStmt { $$ = ast_stmt_if($1); }
+     | whileStmt { $$ = ast_stmt_while($1); }
+     | readStmt { $$ = ast_stmt_read($1); }
+     | printStmt { $$ = ast_stmt_print($1); }
+     | blockStmt { $$ = ast_stmt_block($1); }
+     ;
+
+assignStmt : identsym becomessym expr { $$ = ast_assign_stmt(ast_ident(yylocation, $1), $3); }
+           ;
+
+callStmt : callsym identsym { $$ = ast_call_stmt(ast_ident(yylocation, $2)); }
+         ;
+
+ifStmt : ifsym condition thensym stmts elsesym stmts endsym
+       { $$ = ast_if_then_else_stmt($2, $4, $6); }
+       | ifsym condition thensym stmts endsym
+       { $$ = ast_if_then_stmt($2, $4); }
+       ;
+
+whileStmt : whilesym condition dosym stmts endsym
+          { $$ = ast_while_stmt($2, $4); }
+          ;
+
+readStmt : readsym identsym { $$ = ast_read_stmt(ast_ident(yylocation, $2)); }
+         ;
+
+printStmt : printsym expr { $$ = ast_print_stmt($2); }
+          ;
+
+expr : expr plussym term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | expr minussym term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | term { $$ = $1; }
+     ;
+
+term : term multsym factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | term divsym factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | factor { $$ = $1; }
+     ;
+
+factor : identsym { $$ = ast_expr_ident(ast_ident(yylocation, $1)); }
+       | numbersym { $$ = ast_expr_number($1); }
+       | lparensym expr rparensym { $$ = $2; }
+       ;
+
+condition : dbCondition
+          | relOpCondition
+          ;
+
+dbCondition : divisiblesym expr bysym expr { $$ = ast_condition_db(ast_db_condition($2, $4)); }
+            ;
+
+relOpCondition : expr relOp expr { $$ = ast_condition_rel_op(ast_rel_op_condition($1, $2, $3)); }
+               ;
+
+relOp : eqeqsym { $$ = ast_token(yylocation, "==", EQ); }
+      | neqsym { $$ = ast_token(yylocation, "!=", NEQ); }
+      | ltsym { $$ = ast_token(yylocation, "<", LT); }
+      | leqsym { $$ = ast_token(yylocation, "<=", LEQ); }
+      | gtsym { $$ = ast_token(yylocation, ">", GT); }
+      | geqsym { $$ = ast_token(yylocation, ">=", GEQ); }
+      ;
 
 %%
 
