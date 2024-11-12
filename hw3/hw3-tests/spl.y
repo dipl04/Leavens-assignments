@@ -5,24 +5,18 @@
 }
 
 %code requires {
-
- /* Including "ast.h" must be at the top, to define the AST type */
 #include "ast.h"
 #include "machine_types.h"
 #include "parser_types.h"
 #include "lexer.h"
 
-    /* Report an error to the user on stderr */
 extern void yyerror(const char *filename, const char *msg);
-
-}    /* end of %code requires */
+}    
 
 %verbose
 %define parse.lac full
 %define parse.error detailed
 
- /* the following passes file_name to yyerror,
-    and declares it as an formal parameter of yyparse. */
 %parse-param { char const *file_name }
 
 %token <ident> identsym
@@ -64,7 +58,6 @@ extern void yyerror(const char *filename, const char *msg);
 %token <token> geqsym     ">="
 
 %type <block> program
-
 %type <block> block
 
 %type <const_decls> constDecls
@@ -79,7 +72,6 @@ extern void yyerror(const char *filename, const char *msg);
 %type <proc_decls> procDecls
 %type <proc_decl> procDecl
 
-
 %type <stmts> stmts
 %type <stmt_list> stmtList
 %type <stmt> stmt
@@ -92,8 +84,8 @@ extern void yyerror(const char *filename, const char *msg);
 %type <block_stmt> blockStmt
 
 %type <condition> condition
-%type <db_condition> dbCondition
-%type <rel_op_condition> relOpCondition
+%type <condition> dbCondition
+%type <condition> relOpCondition
 %type <token> relOp
 
 %type <expr> expr
@@ -103,28 +95,21 @@ extern void yyerror(const char *filename, const char *msg);
 %start program
 
 %code {
- /* extern declarations provided by the lexer */
 extern int yylex(void);
-
- /* The AST for the program, set by the semantic action 
-    for the nonterminal program. */
-block_t progast; 
-
- /* Set the program's ast to be t */
+block_t progast;
 extern void setProgAST(block_t t);
 }
 
 %%
- /* Write your grammar rules below and before the next %% */
 
 program : block periodsym { setProgAST($1); }
         ;
         
 block : beginsym constDecls varDecls procDecls stmts endsym
-      { $$ = ast_block($1, $2, $3, $4, $5); }
+      { $$ = ast_block(@1, $2, $3, $4, $5); }
       ;
 
-constDecls : %empty { $$ = ast_const_decls_empty(ast_empty(yylocation)); }
+constDecls : %empty { $$ = ast_const_decls_empty(); }
            | constDecls constDecl { $$ = ast_const_decls($1, $2); }
            ;
 
@@ -135,28 +120,28 @@ constDefList : constDef { $$ = ast_const_def_list_singleton($1); }
              | constDefList commasym constDef { $$ = ast_const_def_list($1, $3); }
              ;
 
-constDef : identsym eqsym numbersym { $$ = ast_const_def(ast_ident(yylocation, $1), ast_expr_number($3)); }
+constDef : identsym eqsym numbersym { $$ = ast_const_def(ast_ident(@1, $1), ast_number($3)); }
          ;
 
-varDecls : %empty { $$ = ast_var_decls_empty(ast_empty(yylocation)); }
+varDecls : %empty { $$ = ast_var_decls_empty(); }
          | varDecls varDecl { $$ = ast_var_decls($1, $2); }
          ;
 
 varDecl : varsym identList semisym { $$ = ast_var_decl($2); }
         ;
 
-identList : identsym { $$ = ast_ident_list_singleton(ast_ident(yylocation, $1)); }
-          | identList commasym identsym { $$ = ast_ident_list($1, ast_ident(yylocation, $3)); }
+identList : identsym { $$ = ast_ident_list_singleton(ast_ident(@1, $1)); }
+          | identList commasym identsym { $$ = ast_ident_list($1, ast_ident(@3, $3)); }
           ;
 
-procDecls : %empty { $$ = ast_proc_decls_empty(ast_empty(yylocation)); }
+procDecls : %empty { $$ = ast_proc_decls_empty(); }
           | procDecls procDecl { $$ = ast_proc_decls($1, $2); }
           ;
 
-procDecl : procsym identsym block semisym { $$ = ast_proc_decl(ast_ident(yylocation, $2), $3); }
+procDecl : procsym identsym block semisym { $$ = ast_proc_decl(ast_ident(@2, $2), $3); }
          ;
 
-stmts : %empty { $$ = ast_stmts_empty(ast_empty(yylocation)); }
+stmts : %empty { $$ = ast_stmts_empty(); }
       | stmtList { $$ = ast_stmts($1); }
       ;
 
@@ -173,13 +158,13 @@ stmt : assignStmt { $$ = ast_stmt_assign($1); }
      | blockStmt { $$ = ast_stmt_block($1); }
      ;
 
-blockStmt : beginsym stmtList endsym { $$ = ast_block($2); }
+blockStmt : beginsym stmtList endsym { $$ = ast_block(@1, NULL, NULL, NULL, $2); }
           ;
 
-assignStmt : identsym becomessym expr { $$ = ast_assign_stmt(ast_ident(yylocation, $1), $3); }
+assignStmt : identsym becomessym expr { $$ = ast_assign_stmt(ast_ident(@1, $1), $3); }
            ;
 
-callStmt : callsym identsym { $$ = ast_call_stmt(ast_ident(yylocation, $2)); }
+callStmt : callsym identsym { $$ = ast_call_stmt(ast_ident(@2, $2)); }
          ;
 
 ifStmt : ifsym condition thensym stmts elsesym stmts endsym
@@ -192,23 +177,23 @@ whileStmt : whilesym condition dosym stmts endsym
           { $$ = ast_while_stmt($2, $4); }
           ;
 
-readStmt : readsym identsym { $$ = ast_read_stmt(ast_ident(yylocation, $2)); }
+readStmt : readsym identsym { $$ = ast_read_stmt(ast_ident(@2, $2)); }
          ;
 
 printStmt : printsym expr { $$ = ast_print_stmt($2); }
           ;
 
-expr : expr plussym term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
-     | expr minussym term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+expr : expr plussym term { $$ = ast_expr_binary_op(AST_OP_PLUS, $1, $3); }
+     | expr minussym term { $$ = ast_expr_binary_op(AST_OP_MINUS, $1, $3); }
      | term { $$ = $1; }
      ;
 
-term : term multsym factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
-     | term divsym factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+term : term multsym factor { $$ = ast_expr_binary_op(AST_OP_MULT, $1, $3); }
+     | term divsym factor { $$ = ast_expr_binary_op(AST_OP_DIV, $1, $3); }
      | factor { $$ = $1; }
      ;
 
-factor : identsym { $$ = ast_expr_ident(ast_ident(yylocation, $1)); }
+factor : identsym { $$ = ast_expr_ident(ast_ident(@1, $1)); }
        | numbersym { $$ = ast_expr_number($1); }
        | lparensym expr rparensym { $$ = $2; }
        ;
@@ -217,22 +202,21 @@ condition : dbCondition
           | relOpCondition
           ;
 
-dbCondition : divisiblesym expr bysym expr { $$ = ast_condition_db(ast_db_condition($2, $4)); }
+dbCondition : divisiblesym expr bysym expr { $$ = ast_db_condition($2, $4); }
             ;
 
-relOpCondition : expr relOp expr { $$ = ast_condition_rel_op(ast_rel_op_condition($1, $2, $3)); }
+relOpCondition : expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); }
                ;
 
-relOp : eqeqsym { $$ = ast_token(yylocation, "==", EQ); }
-      | neqsym { $$ = ast_token(yylocation, "!=", NEQ); }
-      | ltsym { $$ = ast_token(yylocation, "<", LT); }
-      | leqsym { $$ = ast_token(yylocation, "<=", LEQ); }
-      | gtsym { $$ = ast_token(yylocation, ">", GT); }
-      | geqsym { $$ = ast_token(yylocation, ">=", GEQ); }
+relOp : eqeqsym { $$ = AST_OP_EQ; }
+      | neqsym { $$ = AST_OP_NEQ; }
+      | ltsym { $$ = AST_OP_LT; }
+      | leqsym { $$ = AST_OP_LEQ; }
+      | gtsym { $$ = AST_OP_GT; }
+      | geqsym { $$ = AST_OP_GEQ; }
       ;
 
 %%
 
-// Set the program's ast to be ast
+// Set the program's AST
 void setProgAST(block_t ast) { progast = ast; }
-
