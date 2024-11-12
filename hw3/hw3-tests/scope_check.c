@@ -44,9 +44,9 @@ void scope_check_varDecl(var_decl_t vd)
 // Add declarations for the names in ids
 // to current scope as type t
 // reporting any duplicate declarations
-void scope_check_idents(idents_t ids, type_exp_e t)
+void scope_check_idents(ident_list_t ids, AST_type t)
 {
-    ident_t *idp = ids.idents;
+    ident_t *idp = ids.type_tag;
     while (idp != NULL) {
 	scope_check_declare_ident(*idp, t);
 	idp = idp->next;
@@ -57,7 +57,7 @@ void scope_check_idents(idents_t ids, type_exp_e t)
 // to current scope as type t
 // reporting if it's a duplicate declaration
 void scope_check_declare_ident(ident_t id,
-			       type_exp_e t)
+			       AST_type t)
 {
     if (symtab_declared_in_current_scope(id.name)) {
         // only variables in FLOAT
