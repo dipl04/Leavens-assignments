@@ -81,7 +81,6 @@ extern void yyerror(const char *filename, const char *msg);
 
 
 %type <stmts> stmts
-%type <empty> empty
 %type <stmt_list> stmtList
 %type <stmt> stmt
 %type <assign_stmt> assignStmt
@@ -125,7 +124,7 @@ block : beginsym constDecls varDecls procDecls stmts endsym
       { $$ = ast_block($1, $2, $3, $4, $5); }
       ;
 
-constDecls : /* empty */ { $$ = ast_const_decls_empty(ast_empty(yylocation)); }
+constDecls : %empty { $$ = ast_const_decls_empty(ast_empty(yylocation)); }
            | constDecls constDecl { $$ = ast_const_decls($1, $2); }
            ;
 
@@ -139,7 +138,7 @@ constDefList : constDef { $$ = ast_const_def_list_singleton($1); }
 constDef : identsym eqsym numbersym { $$ = ast_const_def(ast_ident(yylocation, $1), ast_expr_number($3)); }
          ;
 
-varDecls : /* empty */ { $$ = ast_var_decls_empty(ast_empty(yylocation)); }
+varDecls : %empty { $$ = ast_var_decls_empty(ast_empty(yylocation)); }
          | varDecls varDecl { $$ = ast_var_decls($1, $2); }
          ;
 
@@ -150,14 +149,14 @@ identList : identsym { $$ = ast_ident_list_singleton(ast_ident(yylocation, $1));
           | identList commasym identsym { $$ = ast_ident_list($1, ast_ident(yylocation, $3)); }
           ;
 
-procDecls : /* empty */ { $$ = ast_proc_decls_empty(ast_empty(yylocation)); }
+procDecls : %empty { $$ = ast_proc_decls_empty(ast_empty(yylocation)); }
           | procDecls procDecl { $$ = ast_proc_decls($1, $2); }
           ;
 
 procDecl : procsym identsym block semisym { $$ = ast_proc_decl(ast_ident(yylocation, $2), $3); }
          ;
 
-stmts : /* empty */ { $$ = ast_stmts_empty(ast_empty(yylocation)); }
+stmts : %empty { $$ = ast_stmts_empty(ast_empty(yylocation)); }
       | stmtList { $$ = ast_stmts($1); }
       ;
 
@@ -173,6 +172,9 @@ stmt : assignStmt { $$ = ast_stmt_assign($1); }
      | printStmt { $$ = ast_stmt_print($1); }
      | blockStmt { $$ = ast_stmt_block($1); }
      ;
+
+blockStmt : beginsym stmtList endsym { $$ = ast_block($2); }
+          ;
 
 assignStmt : identsym becomessym expr { $$ = ast_assign_stmt(ast_ident(yylocation, $1), $3); }
            ;
