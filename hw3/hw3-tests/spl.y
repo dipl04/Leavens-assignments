@@ -108,13 +108,17 @@ program : block periodsym { setProgAST($1); }
         ;
         
 block : beginsym constDecls varDecls procDecls stmts endsym
-      { $$ = ast_block(@1, $2, $3, $4, $5); }
+      { $$ = ast_block($1, $2, $3, $4, $5); }
       ;
 
-constDecls : %empty { $$ = ast_const_decls_empty(); }
+constDecls : %empty  
+    { 
+        empty_t empty;
+        $$ = ast_const_decls_empty(empty); 
+    }
            | constDecls constDecl { $$ = ast_const_decls($1, $2); }
            ;
-
+           
 constDecl : constsym constDefList semisym { $$ = ast_const_decl($2); }
           ;
 
