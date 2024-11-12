@@ -17,6 +17,8 @@ extern void yyerror(const char *filename, const char *msg);
 %define parse.lac full
 %define parse.error detailed
 
+%locations
+
 %parse-param { char const *file_name }
 
 %token <ident> identsym
