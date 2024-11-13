@@ -542,12 +542,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   107,   107,   110,   114,   119,   122,   125,   126,   129,
-     132,   133,   136,   139,   140,   143,   144,   147,   150,   151,
-     154,   155,   158,   159,   160,   161,   162,   163,   164,   167,
-     170,   173,   176,   178,   182,   186,   189,   192,   193,   194,
-     197,   198,   199,   202,   203,   204,   207,   208,   211,   214,
-     217,   218,   219,   220,   221,   222
+       0,   107,   107,   110,   114,   115,   118,   121,   122,   125,
+     128,   129,   132,   135,   136,   139,   140,   143,   146,   147,
+     150,   151,   154,   155,   156,   157,   158,   159,   160,   163,
+     166,   169,   172,   174,   178,   182,   185,   188,   189,   190,
+     193,   194,   195,   198,   199,   200,   203,   204,   207,   210,
+     213,   214,   215,   216,   217,   218
 };
 #endif
 
@@ -1776,310 +1776,307 @@ yyreduce:
     break;
 
   case 4: /* constDecls: %empty  */
-#line 115 "spl.y"
-    { 
-        empty_t empty;
-        (yyval.const_decls) = ast_const_decls_empty(empty); 
-    }
-#line 1785 "spl.tab.c"
+#line 114 "spl.y"
+                     { (yyval.const_decls) = ast_const_decls_empty(ast_empty(ast_file_loc(progast))); }
+#line 1782 "spl.tab.c"
     break;
 
   case 5: /* constDecls: constDecls constDecl  */
-#line 119 "spl.y"
+#line 115 "spl.y"
                                   { (yyval.const_decls) = ast_const_decls((yyvsp[-1].const_decls), (yyvsp[0].const_decl)); }
-#line 1791 "spl.tab.c"
+#line 1788 "spl.tab.c"
     break;
 
   case 6: /* constDecl: "const" constDefList ";"  */
-#line 122 "spl.y"
+#line 118 "spl.y"
                                           { (yyval.const_decl) = ast_const_decl((yyvsp[-1].const_def_list)); }
-#line 1797 "spl.tab.c"
+#line 1794 "spl.tab.c"
     break;
 
   case 7: /* constDefList: constDef  */
-#line 125 "spl.y"
+#line 121 "spl.y"
                         { (yyval.const_def_list) = ast_const_def_list_singleton((yyvsp[0].const_def)); }
-#line 1803 "spl.tab.c"
+#line 1800 "spl.tab.c"
     break;
 
   case 8: /* constDefList: constDefList "," constDef  */
-#line 126 "spl.y"
+#line 122 "spl.y"
                                               { (yyval.const_def_list) = ast_const_def_list((yyvsp[-2].const_def_list), (yyvsp[0].const_def)); }
-#line 1809 "spl.tab.c"
+#line 1806 "spl.tab.c"
     break;
 
   case 9: /* constDef: identsym "=" numbersym  */
-#line 129 "spl.y"
+#line 125 "spl.y"
                                     { (yyval.const_def) = ast_const_def(ast_ident((yylsp[-2]), (yyvsp[-2].ident)), ast_number((yyvsp[0].number))); }
-#line 1815 "spl.tab.c"
+#line 1812 "spl.tab.c"
     break;
 
   case 10: /* varDecls: %empty  */
-#line 132 "spl.y"
+#line 128 "spl.y"
                   { (yyval.var_decls) = ast_var_decls_empty(); }
-#line 1821 "spl.tab.c"
+#line 1818 "spl.tab.c"
     break;
 
   case 11: /* varDecls: varDecls varDecl  */
-#line 133 "spl.y"
+#line 129 "spl.y"
                             { (yyval.var_decls) = ast_var_decls((yyvsp[-1].var_decls), (yyvsp[0].var_decl)); }
-#line 1827 "spl.tab.c"
+#line 1824 "spl.tab.c"
     break;
 
   case 12: /* varDecl: "var" identList ";"  */
-#line 136 "spl.y"
+#line 132 "spl.y"
                                    { (yyval.var_decl) = ast_var_decl((yyvsp[-1].ident_list)); }
-#line 1833 "spl.tab.c"
+#line 1830 "spl.tab.c"
     break;
 
   case 13: /* identList: identsym  */
-#line 139 "spl.y"
+#line 135 "spl.y"
                      { (yyval.ident_list) = ast_ident_list_singleton(ast_ident((yylsp[0]), (yyvsp[0].ident))); }
-#line 1839 "spl.tab.c"
+#line 1836 "spl.tab.c"
     break;
 
   case 14: /* identList: identList "," identsym  */
-#line 140 "spl.y"
+#line 136 "spl.y"
                                         { (yyval.ident_list) = ast_ident_list((yyvsp[-2].ident_list), ast_ident((yylsp[0]), (yyvsp[0].ident))); }
-#line 1845 "spl.tab.c"
+#line 1842 "spl.tab.c"
     break;
 
   case 15: /* procDecls: %empty  */
-#line 143 "spl.y"
+#line 139 "spl.y"
                    { (yyval.proc_decls) = ast_proc_decls_empty(); }
-#line 1851 "spl.tab.c"
+#line 1848 "spl.tab.c"
     break;
 
   case 16: /* procDecls: procDecls procDecl  */
-#line 144 "spl.y"
+#line 140 "spl.y"
                                { (yyval.proc_decls) = ast_proc_decls((yyvsp[-1].proc_decls), (yyvsp[0].proc_decl)); }
-#line 1857 "spl.tab.c"
+#line 1854 "spl.tab.c"
     break;
 
   case 17: /* procDecl: "proc" identsym block ";"  */
-#line 147 "spl.y"
+#line 143 "spl.y"
                                           { (yyval.proc_decl) = ast_proc_decl(ast_ident((yylsp[-2]), (yyvsp[-2].ident)), (yyvsp[-1].block)); }
-#line 1863 "spl.tab.c"
+#line 1860 "spl.tab.c"
     break;
 
   case 18: /* stmts: %empty  */
-#line 150 "spl.y"
+#line 146 "spl.y"
                { (yyval.stmts) = ast_stmts_empty(); }
-#line 1869 "spl.tab.c"
+#line 1866 "spl.tab.c"
     break;
 
   case 19: /* stmts: stmtList  */
-#line 151 "spl.y"
+#line 147 "spl.y"
                  { (yyval.stmts) = ast_stmts((yyvsp[0].stmt_list)); }
-#line 1875 "spl.tab.c"
+#line 1872 "spl.tab.c"
     break;
 
   case 20: /* stmtList: stmt  */
-#line 154 "spl.y"
+#line 150 "spl.y"
                 { (yyval.stmt_list) = ast_stmt_list_singleton((yyvsp[0].stmt)); }
-#line 1881 "spl.tab.c"
+#line 1878 "spl.tab.c"
     break;
 
   case 21: /* stmtList: stmtList ";" stmt  */
-#line 155 "spl.y"
+#line 151 "spl.y"
                                  { (yyval.stmt_list) = ast_stmt_list((yyvsp[-2].stmt_list), (yyvsp[0].stmt)); }
-#line 1887 "spl.tab.c"
+#line 1884 "spl.tab.c"
     break;
 
   case 22: /* stmt: assignStmt  */
-#line 158 "spl.y"
+#line 154 "spl.y"
                   { (yyval.stmt) = ast_stmt_assign((yyvsp[0].assign_stmt)); }
-#line 1893 "spl.tab.c"
+#line 1890 "spl.tab.c"
     break;
 
   case 23: /* stmt: callStmt  */
-#line 159 "spl.y"
+#line 155 "spl.y"
                 { (yyval.stmt) = ast_stmt_call((yyvsp[0].call_stmt)); }
-#line 1899 "spl.tab.c"
+#line 1896 "spl.tab.c"
     break;
 
   case 24: /* stmt: ifStmt  */
-#line 160 "spl.y"
+#line 156 "spl.y"
               { (yyval.stmt) = ast_stmt_if((yyvsp[0].if_stmt)); }
-#line 1905 "spl.tab.c"
+#line 1902 "spl.tab.c"
     break;
 
   case 25: /* stmt: whileStmt  */
-#line 161 "spl.y"
+#line 157 "spl.y"
                  { (yyval.stmt) = ast_stmt_while((yyvsp[0].while_stmt)); }
-#line 1911 "spl.tab.c"
+#line 1908 "spl.tab.c"
     break;
 
   case 26: /* stmt: readStmt  */
-#line 162 "spl.y"
+#line 158 "spl.y"
                 { (yyval.stmt) = ast_stmt_read((yyvsp[0].read_stmt)); }
-#line 1917 "spl.tab.c"
+#line 1914 "spl.tab.c"
     break;
 
   case 27: /* stmt: printStmt  */
-#line 163 "spl.y"
+#line 159 "spl.y"
                  { (yyval.stmt) = ast_stmt_print((yyvsp[0].print_stmt)); }
-#line 1923 "spl.tab.c"
+#line 1920 "spl.tab.c"
     break;
 
   case 28: /* stmt: blockStmt  */
-#line 164 "spl.y"
+#line 160 "spl.y"
                  { (yyval.stmt) = ast_stmt_block((yyvsp[0].block_stmt)); }
-#line 1929 "spl.tab.c"
+#line 1926 "spl.tab.c"
     break;
 
   case 29: /* blockStmt: "begin" stmtList "end"  */
-#line 167 "spl.y"
+#line 163 "spl.y"
                                      { (yyval.block_stmt) = ast_block((yylsp[-2]), NULL, NULL, NULL, (yyvsp[-1].stmt_list)); }
-#line 1935 "spl.tab.c"
+#line 1932 "spl.tab.c"
     break;
 
   case 30: /* assignStmt: identsym ":=" expr  */
-#line 170 "spl.y"
+#line 166 "spl.y"
                                       { (yyval.assign_stmt) = ast_assign_stmt(ast_ident((yylsp[-2]), (yyvsp[-2].ident)), (yyvsp[0].expr)); }
-#line 1941 "spl.tab.c"
+#line 1938 "spl.tab.c"
     break;
 
   case 31: /* callStmt: "call" identsym  */
-#line 173 "spl.y"
+#line 169 "spl.y"
                             { (yyval.call_stmt) = ast_call_stmt(ast_ident((yylsp[0]), (yyvsp[0].ident))); }
-#line 1947 "spl.tab.c"
+#line 1944 "spl.tab.c"
     break;
 
   case 32: /* ifStmt: "if" condition "then" stmts "else" stmts "end"  */
-#line 177 "spl.y"
+#line 173 "spl.y"
        { (yyval.if_stmt) = ast_if_then_else_stmt((yyvsp[-5].condition), (yyvsp[-3].stmts), (yyvsp[-1].stmts)); }
-#line 1953 "spl.tab.c"
+#line 1950 "spl.tab.c"
     break;
 
   case 33: /* ifStmt: "if" condition "then" stmts "end"  */
-#line 179 "spl.y"
+#line 175 "spl.y"
        { (yyval.if_stmt) = ast_if_then_stmt((yyvsp[-3].condition), (yyvsp[-1].stmts)); }
-#line 1959 "spl.tab.c"
+#line 1956 "spl.tab.c"
     break;
 
   case 34: /* whileStmt: "while" condition "do" stmts "end"  */
-#line 183 "spl.y"
+#line 179 "spl.y"
           { (yyval.while_stmt) = ast_while_stmt((yyvsp[-3].condition), (yyvsp[-1].stmts)); }
-#line 1965 "spl.tab.c"
+#line 1962 "spl.tab.c"
     break;
 
   case 35: /* readStmt: "read" identsym  */
-#line 186 "spl.y"
+#line 182 "spl.y"
                             { (yyval.read_stmt) = ast_read_stmt(ast_ident((yylsp[0]), (yyvsp[0].ident))); }
-#line 1971 "spl.tab.c"
+#line 1968 "spl.tab.c"
     break;
 
   case 36: /* printStmt: "print" expr  */
-#line 189 "spl.y"
+#line 185 "spl.y"
                           { (yyval.print_stmt) = ast_print_stmt((yyvsp[0].expr)); }
-#line 1977 "spl.tab.c"
+#line 1974 "spl.tab.c"
     break;
 
   case 37: /* expr: expr "+" term  */
-#line 192 "spl.y"
+#line 188 "spl.y"
                          { (yyval.expr) = ast_expr_binary_op(AST_OP_PLUS, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1983 "spl.tab.c"
+#line 1980 "spl.tab.c"
     break;
 
   case 38: /* expr: expr "-" term  */
-#line 193 "spl.y"
+#line 189 "spl.y"
                           { (yyval.expr) = ast_expr_binary_op(AST_OP_MINUS, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 1989 "spl.tab.c"
+#line 1986 "spl.tab.c"
     break;
 
   case 39: /* expr: term  */
-#line 194 "spl.y"
+#line 190 "spl.y"
             { (yyval.expr) = (yyvsp[0].expr); }
-#line 1995 "spl.tab.c"
+#line 1992 "spl.tab.c"
     break;
 
   case 40: /* term: term "*" factor  */
-#line 197 "spl.y"
+#line 193 "spl.y"
                            { (yyval.expr) = ast_expr_binary_op(AST_OP_MULT, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 2001 "spl.tab.c"
+#line 1998 "spl.tab.c"
     break;
 
   case 41: /* term: term "/" factor  */
-#line 198 "spl.y"
+#line 194 "spl.y"
                           { (yyval.expr) = ast_expr_binary_op(AST_OP_DIV, (yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 2007 "spl.tab.c"
+#line 2004 "spl.tab.c"
     break;
 
   case 42: /* term: factor  */
-#line 199 "spl.y"
+#line 195 "spl.y"
               { (yyval.expr) = (yyvsp[0].expr); }
-#line 2013 "spl.tab.c"
+#line 2010 "spl.tab.c"
     break;
 
   case 43: /* factor: identsym  */
-#line 202 "spl.y"
+#line 198 "spl.y"
                   { (yyval.expr) = ast_expr_ident(ast_ident((yylsp[0]), (yyvsp[0].ident))); }
-#line 2019 "spl.tab.c"
+#line 2016 "spl.tab.c"
     break;
 
   case 44: /* factor: numbersym  */
-#line 203 "spl.y"
+#line 199 "spl.y"
                    { (yyval.expr) = ast_expr_number((yyvsp[0].number)); }
-#line 2025 "spl.tab.c"
+#line 2022 "spl.tab.c"
     break;
 
   case 45: /* factor: "(" expr ")"  */
-#line 204 "spl.y"
+#line 200 "spl.y"
                                   { (yyval.expr) = (yyvsp[-1].expr); }
-#line 2031 "spl.tab.c"
+#line 2028 "spl.tab.c"
     break;
 
   case 48: /* dbCondition: "divisible" expr "by" expr  */
-#line 211 "spl.y"
+#line 207 "spl.y"
                                            { (yyval.condition) = ast_db_condition((yyvsp[-2].expr), (yyvsp[0].expr)); }
-#line 2037 "spl.tab.c"
+#line 2034 "spl.tab.c"
     break;
 
   case 49: /* relOpCondition: expr relOp expr  */
-#line 214 "spl.y"
+#line 210 "spl.y"
                                  { (yyval.condition) = ast_rel_op_condition((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr)); }
-#line 2043 "spl.tab.c"
+#line 2040 "spl.tab.c"
     break;
 
   case 50: /* relOp: "=="  */
-#line 217 "spl.y"
+#line 213 "spl.y"
                 { (yyval.token) = AST_OP_EQ; }
-#line 2049 "spl.tab.c"
+#line 2046 "spl.tab.c"
     break;
 
   case 51: /* relOp: "!="  */
-#line 218 "spl.y"
+#line 214 "spl.y"
                { (yyval.token) = AST_OP_NEQ; }
-#line 2055 "spl.tab.c"
+#line 2052 "spl.tab.c"
     break;
 
   case 52: /* relOp: "<"  */
-#line 219 "spl.y"
+#line 215 "spl.y"
               { (yyval.token) = AST_OP_LT; }
-#line 2061 "spl.tab.c"
+#line 2058 "spl.tab.c"
     break;
 
   case 53: /* relOp: "<="  */
-#line 220 "spl.y"
+#line 216 "spl.y"
                { (yyval.token) = AST_OP_LEQ; }
-#line 2067 "spl.tab.c"
+#line 2064 "spl.tab.c"
     break;
 
   case 54: /* relOp: ">"  */
-#line 221 "spl.y"
+#line 217 "spl.y"
               { (yyval.token) = AST_OP_GT; }
-#line 2073 "spl.tab.c"
+#line 2070 "spl.tab.c"
     break;
 
   case 55: /* relOp: ">="  */
-#line 222 "spl.y"
+#line 218 "spl.y"
                { (yyval.token) = AST_OP_GEQ; }
-#line 2079 "spl.tab.c"
+#line 2076 "spl.tab.c"
     break;
 
 
-#line 2083 "spl.tab.c"
+#line 2080 "spl.tab.c"
 
         default: break;
       }
@@ -2319,7 +2316,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 225 "spl.y"
+#line 221 "spl.y"
 
 
 // Set the program's AST
