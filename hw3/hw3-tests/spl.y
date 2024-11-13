@@ -115,8 +115,10 @@ block_t progast;
 extern void setProgAST(block_t t);
 }
 
-
 %%
+
+empty : %empty { $$ = ast_empty(progast.file_loc); }
+      ;
 
 program : block "." { setProgAST($1); }
         ;

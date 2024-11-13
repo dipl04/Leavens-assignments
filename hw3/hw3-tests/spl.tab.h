@@ -47,14 +47,18 @@ extern int yydebug;
 /* "%code requires" blocks.  */
 #line 7 "spl.y"
 
+
+ /* Including "ast.h" must be at the top, to define the AST type */
 #include "ast.h"
 #include "machine_types.h"
 #include "parser_types.h"
 #include "lexer.h"
 
+    /* Report an error to the user on stderr */
 extern void yyerror(const char *filename, const char *msg);
 
-#line 58 "spl.tab.h"
+
+#line 62 "spl.tab.h"
 
 /* Token kinds.  */
 #ifndef YYTOKENTYPE
