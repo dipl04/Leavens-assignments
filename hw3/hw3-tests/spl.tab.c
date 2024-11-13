@@ -173,7 +173,7 @@ typedef enum yysymbol_kind_t yysymbol_kind_t;
 
 
 /* Unqualified %code blocks.  */
-#line 106 "spl.y"
+#line 108 "spl.y"
 
  /* extern declarations provided by the lexer */
 extern int yylex(void);
@@ -550,12 +550,12 @@ static const yytype_int8 yytranslate[] =
 /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
 static const yytype_uint8 yyrline[] =
 {
-       0,   120,   120,   123,   126,   130,   131,   134,   137,   138,
-     141,   144,   145,   148,   151,   152,   155,   156,   159,   162,
-     163,   166,   167,   170,   171,   172,   173,   174,   175,   176,
-     179,   192,   195,   198,   200,   204,   208,   211,   214,   215,
-     216,   219,   220,   221,   224,   225,   226,   229,   230,   233,
-     236,   239,   240,   241,   242,   243,   244
+       0,   122,   122,   125,   128,   132,   133,   136,   139,   140,
+     143,   146,   147,   150,   153,   154,   157,   158,   161,   164,
+     165,   168,   169,   172,   173,   174,   175,   176,   177,   178,
+     181,   194,   197,   200,   202,   206,   210,   213,   216,   217,
+     218,   221,   222,   223,   226,   227,   228,   231,   232,   235,
+     238,   241,   242,   243,   244,   245,   246
 };
 #endif
 
@@ -1776,175 +1776,175 @@ yyreduce:
     switch (yyn)
       {
   case 2: /* empty: %empty  */
-#line 120 "spl.y"
+#line 122 "spl.y"
                { (yyval.empty) = ast_empty(progast.file_loc); }
 #line 1782 "spl.tab.c"
     break;
 
   case 3: /* program: block "."  */
-#line 123 "spl.y"
+#line 125 "spl.y"
                     { setProgAST((yyvsp[-1].block)); }
 #line 1788 "spl.tab.c"
     break;
 
   case 4: /* block: "begin" constDecls varDecls procDecls stmts "end"  */
-#line 127 "spl.y"
+#line 129 "spl.y"
       { (yyval.block) = ast_block((yyvsp[-5].token), (yyvsp[-4].const_decls), (yyvsp[-3].var_decls), (yyvsp[-2].proc_decls), (yyvsp[-1].stmts)); }
 #line 1794 "spl.tab.c"
     break;
 
   case 5: /* constDecls: empty  */
-#line 130 "spl.y"
+#line 132 "spl.y"
                     { (yyval.const_decls) = ast_const_decls_empty((yyvsp[0].empty)); }
 #line 1800 "spl.tab.c"
     break;
 
   case 6: /* constDecls: constDecls constDecl  */
-#line 131 "spl.y"
+#line 133 "spl.y"
                                   { (yyval.const_decls) = ast_const_decls((yyvsp[-1].const_decls), (yyvsp[0].const_decl)); }
 #line 1806 "spl.tab.c"
     break;
 
   case 7: /* constDecl: "const" constDefList ";"  */
-#line 134 "spl.y"
+#line 136 "spl.y"
                                       { (yyval.const_decl) = ast_const_decl((yyvsp[-1].const_def_list)); }
 #line 1812 "spl.tab.c"
     break;
 
   case 8: /* constDefList: constDef  */
-#line 137 "spl.y"
+#line 139 "spl.y"
                         { (yyval.const_def_list) = ast_const_def_list_singleton((yyvsp[0].const_def)); }
 #line 1818 "spl.tab.c"
     break;
 
   case 9: /* constDefList: constDefList "," constDef  */
-#line 138 "spl.y"
+#line 140 "spl.y"
                                          { (yyval.const_def_list) = ast_const_def_list((yyvsp[-2].const_def_list), (yyvsp[0].const_def)); }
 #line 1824 "spl.tab.c"
     break;
 
   case 10: /* constDef: identsym "=" numbersym  */
-#line 141 "spl.y"
+#line 143 "spl.y"
                                   { (yyval.const_def) = ast_const_def((yyvsp[-2].ident), (yyvsp[0].number)); }
 #line 1830 "spl.tab.c"
     break;
 
   case 11: /* varDecls: empty  */
-#line 144 "spl.y"
+#line 146 "spl.y"
                  { (yyval.var_decls) = ast_var_decls_empty((yyvsp[0].empty)); }
 #line 1836 "spl.tab.c"
     break;
 
   case 12: /* varDecls: varDecls varDecl  */
-#line 145 "spl.y"
+#line 147 "spl.y"
                             { (yyval.var_decls) = ast_var_decls((yyvsp[-1].var_decls), (yyvsp[0].var_decl)); }
 #line 1842 "spl.tab.c"
     break;
 
   case 13: /* varDecl: "var" identList ";"  */
-#line 148 "spl.y"
+#line 150 "spl.y"
                               { (yyval.var_decl) = ast_var_decl((yyvsp[-1].ident_list)); }
 #line 1848 "spl.tab.c"
     break;
 
   case 14: /* identList: identsym  */
-#line 151 "spl.y"
+#line 153 "spl.y"
                      { (yyval.ident_list) = ast_ident_list_singleton((yyvsp[0].ident)); }
 #line 1854 "spl.tab.c"
     break;
 
   case 15: /* identList: identList "," identsym  */
-#line 152 "spl.y"
+#line 154 "spl.y"
                                    { (yyval.ident_list) = ast_ident_list((yyvsp[-2].ident_list), (yyvsp[0].ident)); }
 #line 1860 "spl.tab.c"
     break;
 
   case 16: /* procDecls: empty  */
-#line 155 "spl.y"
+#line 157 "spl.y"
                   { (yyval.proc_decls) = ast_proc_decls_empty((yyvsp[0].empty)); }
 #line 1866 "spl.tab.c"
     break;
 
   case 17: /* procDecls: procDecls procDecl  */
-#line 156 "spl.y"
+#line 158 "spl.y"
                                { (yyval.proc_decls) = ast_proc_decls((yyvsp[-1].proc_decls), (yyvsp[0].proc_decl)); }
 #line 1872 "spl.tab.c"
     break;
 
   case 18: /* procDecl: "proc" identsym block ";"  */
-#line 159 "spl.y"
+#line 161 "spl.y"
                                      { (yyval.proc_decl) = ast_proc_decl((yyvsp[-2].ident), (yyvsp[-1].block)); }
 #line 1878 "spl.tab.c"
     break;
 
   case 19: /* stmts: empty  */
-#line 162 "spl.y"
+#line 164 "spl.y"
               { (yyval.stmts) = ast_stmts_empty((yyvsp[0].empty)); }
 #line 1884 "spl.tab.c"
     break;
 
   case 20: /* stmts: stmtList  */
-#line 163 "spl.y"
+#line 165 "spl.y"
                  { (yyval.stmts) = ast_stmts((yyvsp[0].stmt_list)); }
 #line 1890 "spl.tab.c"
     break;
 
   case 21: /* stmtList: stmt  */
-#line 166 "spl.y"
+#line 168 "spl.y"
                 { (yyval.stmt_list) = ast_stmt_list_singleton((yyvsp[0].stmt)); }
 #line 1896 "spl.tab.c"
     break;
 
   case 22: /* stmtList: stmtList ";" stmt  */
-#line 167 "spl.y"
+#line 169 "spl.y"
                              { (yyval.stmt_list) = ast_stmt_list((yyvsp[-2].stmt_list), (yyvsp[0].stmt)); }
 #line 1902 "spl.tab.c"
     break;
 
   case 23: /* stmt: assignStmt  */
-#line 170 "spl.y"
+#line 172 "spl.y"
                   { (yyval.stmt) = ast_stmt_assign((yyvsp[0].assign_stmt)); }
 #line 1908 "spl.tab.c"
     break;
 
   case 24: /* stmt: callStmt  */
-#line 171 "spl.y"
+#line 173 "spl.y"
                 { (yyval.stmt) = ast_stmt_call((yyvsp[0].call_stmt)); }
 #line 1914 "spl.tab.c"
     break;
 
   case 25: /* stmt: ifStmt  */
-#line 172 "spl.y"
+#line 174 "spl.y"
               { (yyval.stmt) = ast_stmt_if((yyvsp[0].if_stmt)); }
 #line 1920 "spl.tab.c"
     break;
 
   case 26: /* stmt: whileStmt  */
-#line 173 "spl.y"
+#line 175 "spl.y"
                  { (yyval.stmt) = ast_stmt_while((yyvsp[0].while_stmt)); }
 #line 1926 "spl.tab.c"
     break;
 
   case 27: /* stmt: readStmt  */
-#line 174 "spl.y"
+#line 176 "spl.y"
                 { (yyval.stmt) = ast_stmt_read((yyvsp[0].read_stmt)); }
 #line 1932 "spl.tab.c"
     break;
 
   case 28: /* stmt: printStmt  */
-#line 175 "spl.y"
+#line 177 "spl.y"
                  { (yyval.stmt) = ast_stmt_print((yyvsp[0].print_stmt)); }
 #line 1938 "spl.tab.c"
     break;
 
   case 29: /* stmt: blockStmt  */
-#line 176 "spl.y"
+#line 178 "spl.y"
                  { (yyval.stmt) = ast_stmt_block((yyvsp[0].block_stmt)); }
 #line 1944 "spl.tab.c"
     break;
 
   case 30: /* blockStmt: "begin" stmts "end"  */
-#line 180 "spl.y"
+#line 182 "spl.y"
           {
               empty_t empty = ast_empty((yyvsp[-2].token).file_loc);
               block_t block = ast_block((yyvsp[-2].token),
@@ -1958,145 +1958,145 @@ yyreduce:
     break;
 
   case 31: /* assignStmt: identsym "becomes" expr  */
-#line 192 "spl.y"
+#line 194 "spl.y"
                                      { (yyval.assign_stmt) = ast_assign_stmt((yyvsp[-2].ident), (yyvsp[0].expr)); }
 #line 1964 "spl.tab.c"
     break;
 
   case 32: /* callStmt: "call" identsym  */
-#line 195 "spl.y"
+#line 197 "spl.y"
                            { (yyval.call_stmt) = ast_call_stmt((yyvsp[0].ident)); }
 #line 1970 "spl.tab.c"
     break;
 
   case 33: /* ifStmt: "if" condition "then" stmts "else" stmts "end"  */
-#line 199 "spl.y"
+#line 201 "spl.y"
        { (yyval.if_stmt) = ast_if_then_else_stmt((yyvsp[-5].condition), (yyvsp[-3].stmts), (yyvsp[-1].stmts)); }
 #line 1976 "spl.tab.c"
     break;
 
   case 34: /* ifStmt: "if" condition "then" stmts "end"  */
-#line 201 "spl.y"
+#line 203 "spl.y"
        { (yyval.if_stmt) = ast_if_then_stmt((yyvsp[-3].condition), (yyvsp[-1].stmts)); }
 #line 1982 "spl.tab.c"
     break;
 
   case 35: /* whileStmt: "while" condition "do" stmts "end"  */
-#line 205 "spl.y"
+#line 207 "spl.y"
           { (yyval.while_stmt) = ast_while_stmt((yyvsp[-3].condition), (yyvsp[-1].stmts)); }
 #line 1988 "spl.tab.c"
     break;
 
   case 36: /* readStmt: "read" identsym  */
-#line 208 "spl.y"
+#line 210 "spl.y"
                            { (yyval.read_stmt) = ast_read_stmt((yyvsp[0].ident)); }
 #line 1994 "spl.tab.c"
     break;
 
   case 37: /* printStmt: "print" expr  */
-#line 211 "spl.y"
+#line 213 "spl.y"
                          { (yyval.print_stmt) = ast_print_stmt((yyvsp[0].expr)); }
 #line 2000 "spl.tab.c"
     break;
 
   case 38: /* expr: expr "+" term  */
-#line 214 "spl.y"
+#line 216 "spl.y"
                      { (yyval.expr) = ast_expr_binary_op(ast_binary_op_expr((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr))); }
 #line 2006 "spl.tab.c"
     break;
 
   case 39: /* expr: expr "-" term  */
-#line 215 "spl.y"
+#line 217 "spl.y"
                      { (yyval.expr) = ast_expr_binary_op(ast_binary_op_expr((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr))); }
 #line 2012 "spl.tab.c"
     break;
 
   case 40: /* expr: term  */
-#line 216 "spl.y"
+#line 218 "spl.y"
             { (yyval.expr) = (yyvsp[0].expr); }
 #line 2018 "spl.tab.c"
     break;
 
   case 41: /* term: term "*" factor  */
-#line 219 "spl.y"
+#line 221 "spl.y"
                        { (yyval.expr) = ast_expr_binary_op(ast_binary_op_expr((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr))); }
 #line 2024 "spl.tab.c"
     break;
 
   case 42: /* term: term "/" factor  */
-#line 220 "spl.y"
+#line 222 "spl.y"
                        { (yyval.expr) = ast_expr_binary_op(ast_binary_op_expr((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr))); }
 #line 2030 "spl.tab.c"
     break;
 
   case 43: /* term: factor  */
-#line 221 "spl.y"
+#line 223 "spl.y"
               { (yyval.expr) = (yyvsp[0].expr); }
 #line 2036 "spl.tab.c"
     break;
 
   case 44: /* factor: identsym  */
-#line 224 "spl.y"
+#line 226 "spl.y"
                   { (yyval.expr) = ast_expr_ident((yyvsp[0].ident)); }
 #line 2042 "spl.tab.c"
     break;
 
   case 45: /* factor: numbersym  */
-#line 225 "spl.y"
+#line 227 "spl.y"
                    { (yyval.expr) = ast_expr_number((yyvsp[0].number)); }
 #line 2048 "spl.tab.c"
     break;
 
   case 46: /* factor: "(" expr ")"  */
-#line 226 "spl.y"
+#line 228 "spl.y"
                       { (yyval.expr) = (yyvsp[-1].expr); }
 #line 2054 "spl.tab.c"
     break;
 
   case 49: /* dbCondition: "divisible" expr "by" expr  */
-#line 233 "spl.y"
+#line 235 "spl.y"
                                          { (yyval.db_condition) = ast_db_condition((yyvsp[-2].expr), (yyvsp[0].expr)); }
 #line 2060 "spl.tab.c"
     break;
 
   case 50: /* relOpCondition: expr relOp expr  */
-#line 236 "spl.y"
+#line 238 "spl.y"
                                  { (yyval.rel_op_condition) = ast_rel_op_condition((yyvsp[-2].expr), (yyvsp[-1].token), (yyvsp[0].expr)); }
 #line 2066 "spl.tab.c"
     break;
 
   case 51: /* relOp: "=="  */
-#line 239 "spl.y"
+#line 241 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2072 "spl.tab.c"
     break;
 
   case 52: /* relOp: "!="  */
-#line 240 "spl.y"
+#line 242 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2078 "spl.tab.c"
     break;
 
   case 53: /* relOp: "<"  */
-#line 241 "spl.y"
+#line 243 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2084 "spl.tab.c"
     break;
 
   case 54: /* relOp: "<="  */
-#line 242 "spl.y"
+#line 244 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2090 "spl.tab.c"
     break;
 
   case 55: /* relOp: ">"  */
-#line 243 "spl.y"
+#line 245 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2096 "spl.tab.c"
     break;
 
   case 56: /* relOp: ">="  */
-#line 244 "spl.y"
+#line 246 "spl.y"
                 { (yyval.token) = (yyvsp[0].token); }
 #line 2102 "spl.tab.c"
     break;
@@ -2342,7 +2342,7 @@ yyreturnlab:
   return yyresult;
 }
 
-#line 247 "spl.y"
+#line 249 "spl.y"
 
 
 // Set the program's AST

@@ -7,6 +7,8 @@
 %code requires {
 
  /* Including "ast.h" must be at the top, to define the AST type */
+
+ /* Including "ast.h" must be at the top, to define the AST type */
 #include "ast.h"
 #include "machine_types.h"
 #include "parser_types.h"
