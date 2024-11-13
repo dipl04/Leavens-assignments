@@ -19,7 +19,7 @@ block_t scope_check_program(block_t prog)
     symtab_enter_scope();
     scope_check_varDecls(prog.var_decls);
     // need to update stmt's AST with id_use structs
-    prog.stmts = scope_check_stmt(prog.stmts);
+    prog.stmts = scope_check_stmts(prog.stmts);
     symtab_leave_scope();
     return prog;
 }
@@ -56,15 +56,15 @@ void scope_check_idents(ident_list_t ids, AST_type t)
 // Add declaration for id
 // to current scope as type t
 // reporting if it's a duplicate declaration
-void scope_check_declare_ident(ident_t id,
-			       AST_type t)
+void scope_check_declare_ident(ident_t id, AST_type t)
 {
     if (symtab_declared_in_current_scope(id.name)) {
         // only variables in FLOAT
 	bail_with_prog_error(*(id.file_loc),
 			     "Variable \"%s\" has already been declared!",
 			     id.name);
-    } else {
+    }
+     else {
 	int ofst_cnt = symtab_scope_loc_count();
 	id_attrs *attrs = id_attrs_loc_create(*(id.file_loc),
 					      t, ofst_cnt);
