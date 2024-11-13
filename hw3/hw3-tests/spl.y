@@ -138,25 +138,25 @@ constDefList : constDef { $$ = ast_const_def_list_singleton($1); }
              | constDefList "," constDef { $$ = ast_const_def_list($1, $3); }
              ;
 
-constDef : identsym "=" numbersym { $$ = ast_const_def(ast_ident(@1, $1), ast_number($3)); }
+constDef : identsym "=" numbersym { $$ = ast_const_def($1, $3); }
          ;
 
-varDecls : empty { $$ = ast_var_decls_empty(); }
+varDecls : empty { $$ = ast_var_decls_empty($1); }
          | varDecls varDecl { $$ = ast_var_decls($1, $2); }
          ;
 
 varDecl : "var" identList ";" { $$ = ast_var_decl($2); }
         ;
 
-identList : identsym { $$ = ast_ident_list_singleton(ast_ident(@1, $1)); }
-          | identList "," identsym { $$ = ast_ident_list($1, ast_ident(@3, $3)); }
+identList : identsym { $$ = ast_ident_list_singleton($1); }
+          | identList "," identsym { $$ = ast_ident_list($1, $3); }
           ;
 
-procDecls : empty { $$ = ast_proc_decls_empty(); }
+procDecls : empty { $$ = ast_proc_decls_empty($1); }
           | procDecls procDecl { $$ = ast_proc_decls($1, $2); }
           ;
 
-procDecl : "proc" identsym block ";" { $$ = ast_proc_decl(ast_ident(@2, $2), $3); }
+procDecl : "proc" identsym block ";" { $$ = ast_proc_decl($2, $3); }
          ;
 
 stmts : empty { $$ = ast_stmts_empty($1); }
@@ -176,13 +176,23 @@ stmt : assignStmt { $$ = ast_stmt_assign($1); }
      | blockStmt { $$ = ast_stmt_block($1); }
      ;
 
-blockStmt : "begin" stmtList "end" { $$ = ast_block(@1, NULL, NULL, NULL, $2); }
-          ;
+blockStmt : beginsym stmts endsym
+          {
+              empty_t empty = ast_empty($1.file_loc);
+              block_t block = ast_block($1,
+                                        ast_const_decls_empty(empty),
+                                        ast_var_decls_empty(empty),
+                                        ast_proc_decls_empty(empty),
+                                        $2);
+              $$ = ast_block_stmt(block);
+          }
 
-assignStmt : identsym "becomes" expr { $$ = ast_assign_stmt(ast_ident(@1, $1), $3); }
+
+
+assignStmt : identsym "becomes" expr { $$ = ast_assign_stmt($1, $3); }
            ;
 
-callStmt : "call" identsym { $$ = ast_call_stmt(ast_ident(@2, $2)); }
+callStmt : "call" identsym { $$ = ast_call_stmt($2); }
          ;
 
 ifStmt : "if" condition "then" stmts "else" stmts "end"
@@ -195,23 +205,23 @@ whileStmt : "while" condition "do" stmts "end"
           { $$ = ast_while_stmt($2, $4); }
           ;
 
-readStmt : "read" identsym { $$ = ast_read_stmt(ast_ident(@2, $2)); }
+readStmt : "read" identsym { $$ = ast_read_stmt($2); }
          ;
 
 printStmt : "print" expr { $$ = ast_print_stmt($2); }
           ;
 
-expr : expr "+" term { $$ = ast_expr_binary_op(AST_OP_PLUS, $1, $3); }
-     | expr minussym term { $$ = ast_expr_binary_op(AST_OP_MINUS, $1, $3); }
+expr : expr "+" term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | expr "-" term { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
      | term { $$ = $1; }
      ;
 
-term : term "*" factor { $$ = ast_expr_binary_op(AST_OP_MULT, $1, $3); }
-     | term "/" factor { $$ = ast_expr_binary_op(AST_OP_DIV, $1, $3); }
+term : term "*" factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
+     | term "/" factor { $$ = ast_expr_binary_op(ast_binary_op_expr($1, $2, $3)); }
      | factor { $$ = $1; }
      ;
 
-factor : identsym { $$ = ast_expr_ident(ast_ident(@1, $1)); }
+factor : identsym { $$ = ast_expr_ident($1); }
        | numbersym { $$ = ast_expr_number($1); }
        | "(" expr ")" { $$ = $2; }
        ;
@@ -226,12 +236,12 @@ dbCondition : "divisible" expr "by" expr { $$ = ast_db_condition($2, $4); }
 relOpCondition : expr relOp expr { $$ = ast_rel_op_condition($1, $2, $3); }
                ;
 
-relOp : eqeqsym { $$ = AST_OP_EQ; }
-      | neqsym { $$ = AST_OP_NEQ; }
-      | ltsym { $$ = AST_OP_LT; }
-      | leqsym { $$ = AST_OP_LEQ; }
-      | gtsym { $$ = AST_OP_GT; }
-      | geqsym { $$ = AST_OP_GEQ; }
+relOp : eqeqsym { $$ = $1; }
+      | neqsym  { $$ = $1; }
+      | ltsym   { $$ = $1; }
+      | leqsym  { $$ = $1; }
+      | gtsym   { $$ = $1; }
+      | geqsym  { $$ = $1; }
       ;
 
 %%

@@ -50,7 +50,7 @@ Grammar
    27     | printStmt
    28     | blockStmt
 
-   29 blockStmt: "begin" stmtList "end"
+   29 blockStmt: "begin" stmts "end"
 
    30 assignStmt: identsym "becomes" expr
 
@@ -175,10 +175,10 @@ Nonterminals, with rules where they appear
         on right: 16
     stmts <stmts> (51)
         on left: 18 19
-        on right: 3 32 33 34
+        on right: 3 29 32 33 34
     stmtList <stmt_list> (52)
         on left: 20 21
-        on right: 19 21 29
+        on right: 19 21
     stmt <stmt> (53)
         on left: 22 23 24 25 26 27 28
         on right: 20 21
@@ -471,7 +471,7 @@ State 26
 
 State 27
 
-   29 blockStmt: "begin" • stmtList "end"
+   29 blockStmt: "begin" • stmts "end"
 
     identsym  shift, and go to state 24
     "call"    shift, and go to state 26
@@ -481,7 +481,11 @@ State 27
     "read"    shift, and go to state 30
     "print"   shift, and go to state 31
 
-    stmtList    go to state 51
+    $default  reduce using rule 1 (empty)
+
+    empty       go to state 32
+    stmts       go to state 51
+    stmtList    go to state 35
     stmt        go to state 36
     blockStmt   go to state 37
     assignStmt  go to state 38
@@ -693,10 +697,8 @@ State 50
 
 State 51
 
-   21 stmtList: stmtList • ";" stmt
-   29 blockStmt: "begin" stmtList • "end"
+   29 blockStmt: "begin" stmts • "end"
 
-    ";"    shift, and go to state 66
     "end"  shift, and go to state 70
 
 
@@ -882,7 +884,7 @@ State 69
 
 State 70
 
-   29 blockStmt: "begin" stmtList "end" •
+   29 blockStmt: "begin" stmts "end" •
 
     $default  reduce using rule 29 (blockStmt)
 
