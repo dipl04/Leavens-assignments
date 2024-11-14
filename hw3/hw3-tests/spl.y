@@ -191,7 +191,7 @@ blockStmt : beginsym stmts endsym
 
 
 
-assignStmt : identsym "becomes" expr { $$ = ast_assign_stmt($1, $3); }
+assignStmt : identsym becomessym expr { $$ = ast_assign_stmt($1, $3); }
            ;
 
 callStmt : "call" identsym { $$ = ast_call_stmt($2); }
