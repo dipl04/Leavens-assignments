@@ -208,7 +208,6 @@ code_seq gen_code_stmts(stmts_t *stmts)
 }
 
 // gen code for assign stmt
-// TODO find out how to get the offset, 2nd parameter in code_swr, from variable
 code_seq gen_code_assign_stmt(assign_stmt_t stmt)
 {
     code_seq ret = code_seq_empty();
@@ -223,8 +222,9 @@ code_seq gen_code_assign_stmt(assign_stmt_t stmt)
 
     // generate code to store the result into the variable
     code_seq store_code = code_seq_empty();
+    int var_offset = id_use_get_attrs(stmt.idu)->offset_count;
 
-    code_seq_add_to_end(&store_code, code_swr(4, 0, 1)); // store from $r1
+    code_seq_add_to_end(&store_code, code_swr(4, var_offset, 1)); // store from $r1
     code_seq_concat(&ret, store_code);
 
     return ret;
