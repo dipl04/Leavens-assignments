@@ -8,6 +8,8 @@
 // some important register numbers in the ISA
 #define GP 0
 #define SP 1
+#define T0 3 // temporary registers
+#define T1 4 // temporary registers
 #define FP 2
 #define RA 7
 
@@ -15,4 +17,3 @@
 // Return the standard symbolic name for n
 extern const char *regname_get(reg_num_type n);
 #endif
-
