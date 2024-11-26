@@ -9,6 +9,7 @@
 #include "gen_code.h"
 #include "utilities.h"
 #include "regname.h"
+#include "spl.tab.h"
 
 #define STACK_SPACE 4096
 
@@ -306,48 +307,48 @@ code_seq gen_code_binary_op_expr(binary_op_expr_t exp)
 code_seq gen_code_op(token_t op, type_exp_e typ)
 {
     code_seq ret = code_seq_empty();
-    ret = code_seq_concat(ret, code_pop_stack_into_reg(AT, typ));
-    ret = code_seq_concat(ret, code_pop_stack_into_reg(V0, typ));
+    code_seq_concat(&ret, code_pop_stack_into_reg(AT, typ));
+    code_seq_concat(&ret, code_pop_stack_into_reg(V0, typ));
 
     code_seq operation = code_seq_empty();
 
     switch (op.code)
     {
     case eqsym:
-        operation = code_seq_singleton(code_cpr(V0, AT));
-        operation = code_seq_add_to_end(operation, code_beq(V0, 0, 1)); // Conditional branch
+        code_seq_singleton(code_cpr(V0, AT));
+        code_seq_add_to_end(&operation, code_beq(V0, 0, 1)); // Conditional branch
         break;
     case neqsym:
-        operation = code_seq_singleton(code_cpr(V0, AT));
-        operation = code_seq_add_to_end(operation, code_bne(V0, 0, 1));
+        code_seq_singleton(code_cpr(V0, AT));
+        code_seq_add_to_end(&operation, code_bne(V0, 0, 1));
         break;
     case ltsym:
-        operation = code_seq_singleton(code_sub(V0, 0, AT, 0));
-        operation = code_seq_add_to_end(operation, code_bltz(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bltz(V0, 1));
         break;
     case leqsym:
-        operation = code_seq_singleton(code_sub(V0, 0, AT, 0));
-        operation = code_seq_add_to_end(operation, code_blez(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_blez(V0, 1));
         break;
     case gtsym:
-        operation = code_seq_singleton(code_sub(V0, 0, AT, 0));
-        operation = code_seq_add_to_end(operation, code_bgtz(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bgtz(V0, 1));
         break;
     case geqsym:
-        operation = code_seq_singleton(code_sub(V0, 0, AT, 0));
-        operation = code_seq_add_to_end(operation, code_bgez(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bgez(V0, 1));
         break;
     case plussym:
-        operation = code_seq_singleton(code_add(V0, 0, AT, 0));
+        code_seq_singleton(code_add(V0, 0, AT, 0));
         break;
     case minussym:
-        operation = code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
         break;
     case multsym:
-        operation = code_seq_singleton(code_mul(V0, 0));
+        code_seq_singleton(code_mul(V0, 0));
         break;
     case divsym:
-        operation = code_seq_singleton(code_div(V0, 0));
+        code_seq_singleton(code_div(V0, 0));
         break;
     default:
         bail_with_error("Unknown token code (%d) in gen_code_op",
@@ -356,8 +357,10 @@ code_seq gen_code_op(token_t op, type_exp_e typ)
     }
 
     // push whatever result is back onto stack
-    operation = code_seq_concat(operation, code_push_reg_on_stack(V0, typ));
-    return code_seq_concat(ret, operation);
+    code_seq_concat(&operation, code_push_reg_on_stack(V0, typ));
+    code_seq_concat(&ret, operation);
+
+    return ret;
 }
 
 // Generate code to apply the floating-point arith_op to the
