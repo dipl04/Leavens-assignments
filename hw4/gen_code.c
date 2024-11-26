@@ -4,6 +4,7 @@
 #include "ast.h"
 #include "code_seq.h"
 #include "id_use.h"
+#include "code_utils.h"
 #include "literal_table.h"
 #include "gen_code.h"
 #include "utilities.h"
@@ -79,23 +80,20 @@ static void gen_code_output_program(BOFFILE bf, code_seq main_cs)
 
 // Requires: bf if open for writing in binary
 // Generate code for prog into bf
-void gen_code_program(BOFFILE bf, program_t prog)
+void gen_code_program(BOFFILE bf, block_t prog)
 {
     code_seq main_cs;
     // We want to make the main program's AR look like all blocks... so:
     // allocate space and initialize any variables
     main_cs = gen_code_var_decls(prog.var_decls);
-    int vars_len_in_bytes = (code_seq_size(main_cs) / 2) * BYTES_PER_WORD;
+    int vars_len_in_bytes = (code_seq_size(main_cs) / 2) ;
     // there is no static link for the program as a whole,
     // so nothing to do for saving FP into A0 as would be done for a block
-    main_cs = code_seq_concat(main_cs, code_save_registers_for_AR());
-    main_cs = code_seq_concat(main_cs,
-                              gen_code_stmt(prog.stmt));
-    main_cs = code_seq_concat(main_cs,
-                              code_restore_registers_from_AR());
-    main_cs = code_seq_concat(main_cs,
-                              code_deallocate_stack_space(vars_len_in_bytes));
-    main_cs = code_seq_add_to_end(main_cs, code_exit());
+    main_cs = code_utils_set_up_program();
+    code_seq_concat(&main_cs, gen_code_stmt(prog.stmts));
+    code_seq_concat(&main_cs, code_utils_restore_registers_from_AR());
+    code_seq_concat(&main_cs, code_utils_deallocate_stack_space(vars_len_in_bytes));
+    main_cs = code_utils_tear_down_program();
     gen_code_output_program(bf, main_cs);
 }
 
@@ -141,7 +139,7 @@ code_seq gen_code_idents(ident_list_t idents)
         // TODO figure out what to put in the case statements
         switch (idp->type_tag)
         {
-        case:
+        case: 
             code_seq_add_to_end(&alloc_and_init, code_fsw(SP, 0, 0));
             break;
         case:
@@ -161,9 +159,9 @@ code_seq gen_code_idents(ident_list_t idents)
 }
 
 // Generate code for stmt
-code_seq gen_code_stmt(stmt_t stmt)
+code_seq gen_code_stmt(stmts_t stmt)
 {
-    switch (stmt.stmt_kind)
+    switch (stmt.stmt_list.start->stmt_kind)
     {
     case assign_stmt:
         return gen_code_assign_stmt(stmt.data.assign_stmt);
