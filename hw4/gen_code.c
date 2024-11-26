@@ -139,10 +139,10 @@ code_seq gen_code_idents(ident_list_t idents)
         // TODO figure out what to put in the case statements
         switch (idp->type_tag)
         {
-        case: 
+        case ident_ast: 
             code_seq_add_to_end(&alloc_and_init, code_fsw(SP, 0, 0));
             break;
-        case:
+        case number_ast: 
             code_seq_add_to_end(&alloc_and_init, code_sw(SP, 0, 0));
             break;
         default:
