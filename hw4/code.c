@@ -13,8 +13,9 @@
 static code *code_create(bin_instr_t instr)
 {
     code *ret = (code *)malloc(sizeof(code));
-    if (ret == NULL) {
-	bail_with_error("Not enough space to allocate a code struct!");
+    if (ret == NULL)
+    {
+        bail_with_error("Not enough space to allocate a code struct!");
     }
     ret->next = NULL;
     ret->instr = instr;
@@ -25,7 +26,7 @@ static code *code_create(bin_instr_t instr)
 
 // return a freshly allocated computational-format instruction
 static code *create_comp_instr(reg_num_type t, offset_type ot, reg_num_type s,
-			       offset_type os, func0_code fc)
+                               offset_type os, func0_code fc)
 {
     comp_instr_t ci;
     ci.op = COMP_O;
@@ -43,13 +44,13 @@ static code *create_comp_instr(reg_num_type t, offset_type ot, reg_num_type s,
 // with the named mnemonic and parameters
 code *code_nop()
 {
-    return create_comp_instr(0,0,0,0,NOP_F);
+    return create_comp_instr(0, 0, 0, 0, NOP_F);
 }
 
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_add(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, ADD_F);
 }
@@ -57,7 +58,7 @@ code *code_add(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_sub(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, SUB_F);
 }
@@ -65,7 +66,7 @@ code *code_sub(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_cpw(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, CPW_F);
 }
@@ -80,7 +81,7 @@ code *code_cpr(reg_num_type t, reg_num_type s)
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_and(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, AND_F);
 }
@@ -88,7 +89,7 @@ code *code_and(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_bor(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, BOR_F);
 }
@@ -96,7 +97,7 @@ code *code_bor(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_nor(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, NOR_F);
 }
@@ -104,7 +105,7 @@ code *code_nor(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_xor(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, XOR_F);
 }
@@ -126,7 +127,7 @@ code *code_swr(reg_num_type t, offset_type ot, reg_num_type s)
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_sca(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, SCA_F);
 }
@@ -134,7 +135,7 @@ code *code_sca(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_lwi(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, LWI_F);
 }
@@ -142,17 +143,16 @@ code *code_lwi(reg_num_type t, offset_type ot,
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_neg(reg_num_type t, offset_type ot,
-	       reg_num_type s, offset_type os)
+               reg_num_type s, offset_type os)
 {
     return create_comp_instr(t, ot, s, os, NEG_F);
 }
-
 
 // --- other computational format instructions, in SSM Manual's table 4 ---
 
 // return a freshly allocated computational-format instruction
 static code *create_other_comp_instr(reg_num_type t, offset_type o,
-				     arg_type a, func1_code fc)
+                                     arg_type a, func1_code fc)
 {
     other_comp_instr_t oci;
     oci.op = OTHC_O;
@@ -249,19 +249,18 @@ code *code_jrel(offset_type o)
     return create_other_comp_instr(0, 0, o, JREL_F);
 }
 
-
 // --- immediate format instructions, in SSM Manual's table 5 ---
 
 // return a fresh immediate-type instruction
 // (with a signed immediate operand)
 static code *create_immed_instr(op_code op, reg_num_type r,
-				offset_type o, immediate_type i)
+                                offset_type o, immediate_type i)
 {
     immed_instr_t ii;
     ii.op = op;
     ii.reg = r;
     ii.offset = o;
-    ii.immed = i;  // this is sign extended by the VM, not here!
+    ii.immed = i; // this is sign extended by the VM, not here!
     bin_instr_t bi;
     bi.immed = ii;
     return code_create(bi);
@@ -270,13 +269,13 @@ static code *create_immed_instr(op_code op, reg_num_type r,
 // return a fresh immediate-type instruction
 // (with an unsigned immediate operand)
 static code *create_uimmed_instr(op_code op, reg_num_type r,
-				 offset_type o, uimmed_type u)
+                                 offset_type o, uimmed_type u)
 {
     uimmed_instr_t ui;
     ui.op = op;
     ui.reg = r;
     ui.offset = o;
-    ui.uimmed = u; 
+    ui.uimmed = u;
     bin_instr_t bi;
     bi.uimmed = ui;
     return code_create(bi);
@@ -450,13 +449,12 @@ code *code_rch(reg_num_type t, offset_type o)
 // with the named mnemonic and parameters
 code *code_stra()
 {
-    return create_syscall_instr(start_tracing_sc,0,0);
+    return create_syscall_instr(start_tracing_sc, 0, 0);
 }
 
 // Create and return a fresh instruction
 // with the named mnemonic and parameters
 code *code_notr()
 {
-    return create_syscall_instr(stop_tracing_sc,0,0);
+    return create_syscall_instr(stop_tracing_sc, 0, 0);
 }
-

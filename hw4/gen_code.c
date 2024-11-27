@@ -109,7 +109,6 @@ code_seq gen_code_var_decls(var_decls_t vds)
     while (vdp != NULL)
     {
         // Generate these in reverse order,
-        // Generate these in reverse order,
         // so the addressing offsets work properly
         code_seq s1 = gen_code_var_decl(*vdp);
         code_seq_concat(&s1, ret);
@@ -233,61 +232,230 @@ code_seq gen_code_assign_stmt(assign_stmt_t stmt)
     return ret;
 }
 
-// gen code for assign stmt
-code_seq gen_code_assign_stmt(assign_stmt_t stmt)
+// Generate code for stmt
+code_seq gen_code_call_stmt(call_stmt_t stmt)
 {
     code_seq ret = code_seq_empty();
 
-    // generate code for the expression and place the result on the stack
-    code_seq expr_code = gen_code_expr(*stmt.expr);
-    code_seq_concat(&ret, expr_code);
-
-    // compute the frame pointer for variable access
-    code_seq fp_code = code_utils_compute_fp(4, 0); // Use $r4 as temporary register
-    code_seq_concat(&ret, fp_code);
-
-    // generate code to store the result into the variable
-    code_seq store_code = code_seq_empty();
-    int var_offset = id_use_get_attrs(stmt.idu)->offset_count;
-
-    code_seq_add_to_end(&store_code, code_swr(4, var_offset, 1)); // store from $r1
-    code_seq_concat(&ret, store_code);
+    // Generate code to call the function
+    code_seq call_code = code_seq_singleton(code_call(stmt.name));
+    code_seq_concat(&ret, call_code);
 
     return ret;
 }
 
-// Generate code for stmt
-code_seq gen_code_call_stmt(call_stmt_t stmt)
-{
-}
-
-// Generate code for the if-statment given by stmt
+// Generate code for the if-statement given by stmt
 code_seq gen_code_if_stmt(if_stmt_t stmt)
 {
     code_seq ret = code_seq_empty();
+    code_seq condition_code = code_seq_empty();
+
+    // Generate code for the left expression of the condition
+    code_seq left_code = gen_code_expr(stmt.condition.data.rel_op_cond.expr1);
+    // Generate code for the right expression of the condition
+    code_seq right_code = gen_code_expr(stmt.condition.data.rel_op_cond.expr2);
+
+    // Combine the code sequences for the condition
+    code_seq_concat(&ret, left_code);
+    code_seq_concat(&ret, right_code);
+
+    // Pop the right expression result into $r2
+    code_seq_add_to_end(&condition_code, code_pop_register(2));
+
+    // Pop the left expression result into $r1
+    code_seq_add_to_end(&condition_code, code_pop_register(1));
+
+    // Compare $r1 and $r2 based on the operator and store result in $r3
+    switch (stmt.condition.cond_kind)
+    {
+    case ltsym:
+        // $r3 = ($r1 < $r2) ? 1 : 0
+        code_seq_add_to_end(&condition_code, code_lt(3, 0, 1, 2));
+        break;
+    case gtsym:
+        // $r3 = ($r1 > $r2) ? 1 : 0
+        code_seq_add_to_end(&condition_code, code_gt(3, 0, 1, 2));
+        break;
+    case eqsym:
+        // $r3 = ($r1 == $r2) ? 1 : 0
+        code_seq_add_to_end(&condition_code, code_eq(3, 0, 1, 2));
+        break;
+    // Add cases for other operators as needed
+    default:
+        fprintf(stderr, "Unsupported operator in condition\n");
+        exit(1);
+    }
+
+    code_seq_concat(&ret, condition_code);
+
+    // Pop the result into register $r1
+    code_seq_add_to_end(&ret, code_pop_register(1));
+
+    // Load zero into register $r2
+    code_seq_add_to_end(&ret, code_lit(2, 0, 0));
+
+    // Subtract $r2 from $r1, result in $r3
+    code_seq_add_to_end(&ret, code_sub(3, 0, 1, 2));
+
+    // Now, if $r3 is zero, condition was true
+    // We'll use code_bne to branch if $r3 != 0 (i.e., condition is false)
+
+    // Generate code for 'then' statements
+    code_seq then_code = gen_code_stmts(stmt.then_stmts);
+    int then_code_size = code_seq_size(then_code);
+
+    if (stmt.else_stmts != NULL)
+    {
+        // Generate code for 'else' statements
+        code_seq else_code = gen_code_stmts(stmt.else_stmts);
+        int else_code_size = code_seq_size(else_code);
+
+        immediate_type branch_to_else_offset = then_code_size + 2; // +2 for the jump over else code
+
+        // Add branch instruction to skip 'then' code if condition is false
+        code_seq_add_to_end(&ret, code_bne(3, 0, branch_to_else_offset));
+
+        // Add 'then' code
+        code_seq_concat(&ret, then_code);
+
+        // Add jump over 'else' code
+        immediate_type jump_over_else_offset = else_code_size + 1;
+        code_seq_add_to_end(&ret, code_jrel(jump_over_else_offset));
+
+        // Add 'else' code
+        code_seq_concat(&ret, else_code);
+    }
+    else
+    {
+        // No 'else' part
+        immediate_type branch_over_then_offset = then_code_size + 1; // +1 to skip 'then' code
+
+        // Add branch instruction to skip 'then' code if condition is false
+        code_seq_add_to_end(&ret, code_bne(3, 0, branch_over_then_offset));
+
+        // Add 'then' code
+        code_seq_concat(&ret, then_code);
+    }
+
+    return ret;
 }
 
+// Generate code for the while-statement given by stmt
 code_seq gen_code_while_stmt(while_stmt_t stmt)
 {
+    code_seq ret = code_seq_empty();
+
+    // Record the starting position of the loop
+    int start_of_loop = code_seq_size(ret);
+
+    // Generate code for the left expression of the condition
+    code_seq left_code = gen_code_expr(stmt.condition.data.rel_op_cond.expr1);
+
+    // Generate code for the right expression of the condition
+    code_seq right_code = gen_code_expr(stmt.condition.data.rel_op_cond.expr2);
+
+    // Combine the code sequences for the condition
+    code_seq_concat(&ret, left_code);
+    code_seq_concat(&ret, right_code);
+
+    code_seq_add_to_end(&ret, 2);
+    code_seq_add_to_end(&ret, 1);
+
+    // Compare $r1 and $r2 based on the operator and store result in $r3
+    switch (stmt.condition.cond_kind)
+    {
+    case ltsym:
+        // $r3 = ($r1 < $r2) ? 1 : 0
+        code_seq_add_to_end(&ret, code_lt(3, 0, 1, 2));
+        break;
+    case gtsym:
+        // $r3 = ($r1 > $r2) ? 1 : 0
+        code_seq_add_to_end(&ret, code_gt(3, 0, 1, 2));
+        break;
+    case eqsym:
+        // $r3 = ($r1 == $r2) ? 1 : 0
+        code_seq_add_to_end(&ret, code_eq(3, 0, 1, 2));
+        break;
+    // Add cases for other operators as needed
+    default:
+        fprintf(stderr, "Unsupported operator in condition\n");
+        exit(1);
+    }
+
+    // Load zero into $r0 to use in comparison
+    code_seq_add_to_end(&ret, code_lit(0, 0, 0));
+
+    // Placeholder for the branch instruction (offset to be calculated later)
+    instr_type branch_instr = code_bne(3, 0, 0); // Branch if $r3 != $r0
+    code_seq_add_to_end(&ret, branch_instr);
+
+    // Record the position of the branch instruction to update offset later
+    int branch_instr_pos = code_seq_size(ret) - 1;
+
+    // Generate code for the loop body
+    code_seq body_code = gen_code_stmts(stmt.body);
+
+    // Append the body code to the loop
+    code_seq_concat(&ret, body_code);
+
+    // After the body, add an unconditional jump back to the start of the loop
+    int end_of_body = code_seq_size(ret);
+
+    // Calculate the offset to jump back to the start of the loop
+    int jump_back_offset = start_of_loop - end_of_body - 1; // -1 because code_jrel is relative to next instruction
+
+    // Add the jump back instruction
+    code_seq_add_to_end(&ret, code_jrel(jump_back_offset));
+
+    // Now, calculate the offset to branch over the loop body if the condition is false
+    int after_loop = code_seq_size(ret);
+
+    // Add unconditional jump back to the start of the loop
+    code_seq_add_to_end(&ret, code_jrel(jump_back_offset));
+
+    return ret;
 }
 
 // Generate code for the read statment given by stmt
 code_seq gen_code_read_stmt(read_stmt_t stmt)
 {
+    code_seq ret = code_seq_empty();
+    code_seq_add_to_end(&ret, code_read(1, 0));
+    int var_address = id_use_2_lexical_address(stmt.idu);
+    code_seq_add_to_end(&ret, code_store(1, 0, var_address));
+
+    return ret;
 }
 
-// Generate code for the write statment given by stmt.
+// Generate code for the print statment given by stmt.
 code_seq gen_code_print_stmt(print_stmt_t stmt)
 {
-    code_seq gen_code_print_stmt(print_stmt_t stmt);
+    code_seq ret = code_seq_empty();
+    code_seq expr_code = gen_code_expr(stmt.expr);
+
+    code_seq_concat(&ret, expr_code);
+    code_seq_add_to_end(&ret, 1);
+
+    code *print_instr = code_pint(1, 0); // Print the value in $r1
+    code_seq_add_to_end(&ret, print_instr);
+
+    return ret;
 }
 
+// Generate code for the block statement given by stmt.
 code_seq gen_code_block_stmt(block_stmt_t stmt)
 {
-}
+    code_seq ret = code_seq_empty();
 
-code_seq gen_code_block_stmt(block_stmt_t stmt)
-{
+    // handle Variable Declarations
+    code_seq var_code = gen_code_var_decls(stmt.block->var_decls);
+    code_seq_concat(&ret, var_code);
+
+    // handle Statements
+    code_seq stmts_code = gen_code_stmts(&stmt.block->stmts);
+    code_seq_concat(&ret, stmts_code);
+
+    return ret;
 }
 
 // Generate code for the expression exp
