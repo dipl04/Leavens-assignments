@@ -9,7 +9,6 @@
 #include "gen_code.h"
 #include "utilities.h"
 #include "regname.h"
-#include "spl.tab.h"
 
 #define STACK_SPACE 4096
 
@@ -88,9 +87,11 @@ void gen_code_program(BOFFILE bf, block_t prog)
     // allocate space and initialize any variables
     main_cs = gen_code_var_decls(prog.var_decls);
     int vars_len_in_bytes = (code_seq_size(main_cs) / 2);
+    int vars_len_in_bytes = (code_seq_size(main_cs) / 2);
     // there is no static link for the program as a whole,
     // so nothing to do for saving FP into A0 as would be done for a block
     main_cs = code_utils_set_up_program();
+    code_seq_concat(&main_cs, gen_code_stmts(&prog.stmts));
     code_seq_concat(&main_cs, gen_code_stmts(&prog.stmts));
     code_seq_concat(&main_cs, code_utils_restore_registers_from_AR());
     code_seq_concat(&main_cs, code_utils_deallocate_stack_space(vars_len_in_bytes));
@@ -107,6 +108,7 @@ code_seq gen_code_var_decls(var_decls_t vds)
     var_decl_t *vdp = vds.var_decls;
     while (vdp != NULL)
     {
+        // Generate these in reverse order,
         // Generate these in reverse order,
         // so the addressing offsets work properly
         code_seq s1 = gen_code_var_decl(*vdp);
@@ -231,6 +233,29 @@ code_seq gen_code_assign_stmt(assign_stmt_t stmt)
     return ret;
 }
 
+// gen code for assign stmt
+code_seq gen_code_assign_stmt(assign_stmt_t stmt)
+{
+    code_seq ret = code_seq_empty();
+
+    // generate code for the expression and place the result on the stack
+    code_seq expr_code = gen_code_expr(*stmt.expr);
+    code_seq_concat(&ret, expr_code);
+
+    // compute the frame pointer for variable access
+    code_seq fp_code = code_utils_compute_fp(4, 0); // Use $r4 as temporary register
+    code_seq_concat(&ret, fp_code);
+
+    // generate code to store the result into the variable
+    code_seq store_code = code_seq_empty();
+    int var_offset = id_use_get_attrs(stmt.idu)->offset_count;
+
+    code_seq_add_to_end(&store_code, code_swr(4, var_offset, 1)); // store from $r1
+    code_seq_concat(&ret, store_code);
+
+    return ret;
+}
+
 // Generate code for stmt
 code_seq gen_code_call_stmt(call_stmt_t stmt)
 {
@@ -239,6 +264,7 @@ code_seq gen_code_call_stmt(call_stmt_t stmt)
 // Generate code for the if-statment given by stmt
 code_seq gen_code_if_stmt(if_stmt_t stmt)
 {
+    code_seq ret = code_seq_empty();
 }
 
 code_seq gen_code_while_stmt(while_stmt_t stmt)
@@ -252,6 +278,11 @@ code_seq gen_code_read_stmt(read_stmt_t stmt)
 
 // Generate code for the write statment given by stmt.
 code_seq gen_code_print_stmt(print_stmt_t stmt)
+{
+    code_seq gen_code_print_stmt(print_stmt_t stmt);
+}
+
+code_seq gen_code_block_stmt(block_stmt_t stmt)
 {
 }
 
@@ -309,6 +340,8 @@ code_seq gen_code_op(token_t op, type_exp_e typ)
     code_seq ret = code_seq_empty();
     code_seq_concat(&ret, code_pop_stack_into_reg(AT, typ));
     code_seq_concat(&ret, code_pop_stack_into_reg(V0, typ));
+    code_seq_concat(&ret, code_pop_stack_into_reg(AT, typ));
+    code_seq_concat(&ret, code_pop_stack_into_reg(V0, typ));
 
     code_seq operation = code_seq_empty();
 
@@ -321,33 +354,47 @@ code_seq gen_code_op(token_t op, type_exp_e typ)
     case neqsym:
         code_seq_singleton(code_cpr(V0, AT));
         code_seq_add_to_end(&operation, code_bne(V0, 0, 1));
+        code_seq_singleton(code_cpr(V0, AT));
+        code_seq_add_to_end(&operation, code_bne(V0, 0, 1));
         break;
     case ltsym:
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bltz(V0, 1));
         code_seq_singleton(code_sub(V0, 0, AT, 0));
         code_seq_add_to_end(&operation, code_bltz(V0, 1));
         break;
     case leqsym:
         code_seq_singleton(code_sub(V0, 0, AT, 0));
         code_seq_add_to_end(&operation, code_blez(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_blez(V0, 1));
         break;
     case gtsym:
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bgtz(V0, 1));
         code_seq_singleton(code_sub(V0, 0, AT, 0));
         code_seq_add_to_end(&operation, code_bgtz(V0, 1));
         break;
     case geqsym:
         code_seq_singleton(code_sub(V0, 0, AT, 0));
         code_seq_add_to_end(&operation, code_bgez(V0, 1));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_add_to_end(&operation, code_bgez(V0, 1));
         break;
     case plussym:
+        code_seq_singleton(code_add(V0, 0, AT, 0));
         code_seq_singleton(code_add(V0, 0, AT, 0));
         break;
     case minussym:
         code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_singleton(code_sub(V0, 0, AT, 0));
         break;
     case multsym:
         code_seq_singleton(code_mul(V0, 0));
+        code_seq_singleton(code_mul(V0, 0));
         break;
     case divsym:
+        code_seq_singleton(code_div(V0, 0));
         code_seq_singleton(code_div(V0, 0));
         break;
     default:
@@ -357,6 +404,10 @@ code_seq gen_code_op(token_t op, type_exp_e typ)
     }
 
     // push whatever result is back onto stack
+    code_seq_concat(&operation, code_push_reg_on_stack(V0, typ));
+    code_seq_concat(&ret, operation);
+
+    return ret;
     code_seq_concat(&operation, code_push_reg_on_stack(V0, typ));
     code_seq_concat(&ret, operation);
 
@@ -526,6 +577,7 @@ code_seq gen_code_ident(ident_t id)
 code_seq gen_code_number(number_t num)
 {
     code_seq ret = code_seq_empty();
+    code_seq ret = code_seq_empty();
     unsigned int global_offset = literal_table_lookup(num.text, num.value);
 
     // Allocate space for the variable on the stack
@@ -545,7 +597,8 @@ code_seq gen_code_number(number_t num)
 code_seq gen_code_logical_not_expr(expr_t exp)
 {
     code_seq ret = gen_code_expr(exp);
-    code_seq_concat(&ret, code_pop_stack_into_reg(AT, bool_te));
+    code_seq_concat(&ret, );
+    code_seq_concat(&ret, );
     // if 0 skip next 2 instructions
     code_seq_add_to_end(&ret, code_beq(0, AT, 2));
     // it was 1, so put 0 in AT
@@ -553,6 +606,8 @@ code_seq gen_code_logical_not_expr(expr_t exp)
     // and skip the next instruction
     code_seq_add_to_end(&ret, code_beq(0, 0, 1));
     // put 1 in AT
+    code_seq_add_to_end(&ret, code_addi(0, AT, 1));
+
     code_seq_add_to_end(&ret, code_addi(0, AT, 1));
 
     // push the result on the stack
