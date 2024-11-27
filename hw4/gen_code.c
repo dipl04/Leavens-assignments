@@ -489,12 +489,9 @@ code_seq gen_code_binary_op_expr(binary_op_expr_t exp)
 {
     // put the values of the two subexpressions on the stack
     code_seq ret = gen_code_expr(*(exp.expr1));
-    ret = code_seq_concat(ret, gen_code_expr(*(exp.expr2)));
-    // check the types match
-    type_exp_e t1 = ast_expr_type(*(exp.expr1));
-    assert(ast_expr_type(*(exp.expr2)) == t1);
+    code_seq_concat(&ret, gen_code_expr(*(exp.expr2)));
     // do the operation, putting the result on the stack
-    ret = code_seq_concat(ret, gen_code_op(exp.op, t1));
+    code_seq_concat(&ret, gen_code_op(exp.arith_op));
     return ret;
 }
 
@@ -503,80 +500,57 @@ code_seq gen_code_binary_op_expr(binary_op_expr_t exp)
 // putting the result on top of the stack in their place,
 // and using V0 and AT as temporary registers
 // Modifies SP when executed
-code_seq gen_code_op(token_t op, type_exp_e typ)
+code_seq gen_code_op(token_t op)
 {
-    code_seq ret = code_seq_empty();
-    code_seq_concat(&ret, code_pop_stack_into_reg(AT, typ));
-    code_seq_concat(&ret, code_pop_stack_into_reg(V0, typ));
-    code_seq_concat(&ret, code_pop_stack_into_reg(AT, typ));
-    code_seq_concat(&ret, code_pop_stack_into_reg(V0, typ));
 
+    code_seq ret = code_seq_empty();
     code_seq operation = code_seq_empty();
 
     switch (op.code)
     {
     case eqsym:
-        code_seq_singleton(code_cpr(V0, AT));
-        code_seq_add_to_end(&operation, code_beq(V0, 0, 1)); // Conditional branch
+        code_seq_singleton(code_cpr(SP, SP));
+        code_seq_add_to_end(&operation, code_beq(SP, 0, 1)); // Conditional branch
         break;
     case neqsym:
-        code_seq_singleton(code_cpr(V0, AT));
-        code_seq_add_to_end(&operation, code_bne(V0, 0, 1));
-        code_seq_singleton(code_cpr(V0, AT));
-        code_seq_add_to_end(&operation, code_bne(V0, 0, 1));
+        code_seq_singleton(code_cpr(SP, SP));
+        code_seq_add_to_end(&operation, code_bne(SP, 0, 1));
         break;
+    //for the following 4 cases I added in immediate values of 0 since I think they are correct, but they may require updating if incorrect
     case ltsym:
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bltz(V0, 1));
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bltz(V0, 1));
+        code_seq_singleton(code_sub(SP, 0, SP, 0));
+        code_seq_add_to_end(&operation, code_bltz(SP, 1, 0));
         break;
     case leqsym:
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_blez(V0, 1));
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_blez(V0, 1));
+        code_seq_singleton(code_sub(SP, 0, SP, 0));
+        code_seq_add_to_end(&operation, code_blez(SP, 1, 0));
         break;
     case gtsym:
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bgtz(V0, 1));
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bgtz(V0, 1));
+        code_seq_singleton(code_sub(SP, 0, SP, 0));
+        code_seq_add_to_end(&operation, code_bgtz(SP, 1, 0));
         break;
     case geqsym:
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bgez(V0, 1));
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_add_to_end(&operation, code_bgez(V0, 1));
+        code_seq_singleton(code_sub(SP, 0, SP, 0));
+        code_seq_add_to_end(&operation, code_bgez(SP, 1, 0));
         break;
     case plussym:
-        code_seq_singleton(code_add(V0, 0, AT, 0));
-        code_seq_singleton(code_add(V0, 0, AT, 0));
+        code_seq_singleton(code_add(SP, 0, SP, 0));
         break;
     case minussym:
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
-        code_seq_singleton(code_sub(V0, 0, AT, 0));
+        code_seq_singleton(code_sub(SP, 0, SP, 0));
         break;
     case multsym:
-        code_seq_singleton(code_mul(V0, 0));
-        code_seq_singleton(code_mul(V0, 0));
+        code_seq_singleton(code_mul(SP, 0));
         break;
     case divsym:
-        code_seq_singleton(code_div(V0, 0));
-        code_seq_singleton(code_div(V0, 0));
+        code_seq_singleton(code_div(SP, 0));
         break;
     default:
-        bail_with_error("Unknown token code (%d) in gen_code_op",
-                        op.code);
+        bail_with_error("Unknown token code (%d) in gen_code_op", op.code);
         break;
     }
 
     // push whatever result is back onto stack
-    code_seq_concat(&operation, code_push_reg_on_stack(V0, typ));
-    code_seq_concat(&ret, operation);
-
-    return ret;
-    code_seq_concat(&operation, code_push_reg_on_stack(V0, typ));
     code_seq_concat(&ret, operation);
 
     return ret;
